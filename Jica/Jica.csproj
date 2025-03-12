@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="wwwroot\assets\image2-Bxn2VfGg.png" />
+      <None Include="wwwroot\assets\img-C6VEYo2r.png" />
+      <None Include="wwwroot\assets\index-CKdjnyGt.css" />
+      <None Include="wwwroot\assets\index-D_8fDZjG.js" />
+      <None Include="wwwroot\assets\logo-Cy26vFVr.png" />
+      <None Include="wwwroot\assets\w40k-BhINvyxc.svg" />
+      <None Include="wwwroot\favicon.ico" />
+      <None Include="wwwroot\index.html" />
+    </ItemGroup>
+
+</Project>

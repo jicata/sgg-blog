@@ -1,0 +1,6 @@
+@Jica_HostAddress = http://localhost:5032
+
+GET {{Jica_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
