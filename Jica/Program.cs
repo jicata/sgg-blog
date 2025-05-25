@@ -41,6 +41,10 @@ app.MapGet("/", async (HttpContext context) =>
     })
     .WithName("GetWeatherForecast");
 
+// Get the PORT environment variable
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
