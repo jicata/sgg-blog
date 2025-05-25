@@ -3,13 +3,14 @@ import { colors } from '../utils/utils.js'
 import SectionContainer from '@/components/common/SectionContainer.vue'
 import MaxWidthWrapper from '@/components/common/MaxWidthWrapper.vue'
 import small_svg from '@/assets/images/w40k.svg'
+import SideNav from '@/components/side-nav/SideNav.vue'
 
 console.log(small_svg)
 </script>
 
 <template>
   <section>
-    <section-container position="relative">
+    <section-container position="relative" background-color="var(--primary-color)">
       <max-width-wrapper class="content-header__wrapper">
           <h1 class="content-header__title">This is the title of the Article</h1>
           <span class="content-header__subtitle">This is the subtitle of the article</span>
@@ -34,6 +35,19 @@ console.log(small_svg)
     </section-container>
     <section-container :background-color="colors['color-four']">
       <article class="content">
+        <SideNav>
+          <template v-slot:heading>
+            <h1>Table of Contents</h1>
+          </template>
+          <template v-slot:nav-menu__items>
+            <li>
+              <a href="#"> Go here</a>
+            </li>
+            <li>
+              <a href="#"> Go here</a>
+            </li>
+          </template>
+        </SideNav>
         <p class="content__paragraph"> The most exciting thing about container queries, in my
           opinion, is that they expand what’s possible in terms of user interface design. They give
           us new options when it comes to responsive design, creating UIs that would be impractical
@@ -138,7 +152,7 @@ console.log(small_svg)
   padding: 0 2rem;
   /*grid-template-columns: 1fr min(44rem, calc(100% - var(--viewport-padding) * 2)) 1fr; */
   grid-template-columns: 1fr 42.875rem 21.875rem 1fr;
-  overflow: clip;
+
 }
 
 .content > * {

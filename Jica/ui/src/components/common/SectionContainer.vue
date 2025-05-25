@@ -16,7 +16,6 @@ const props = defineProps({
 
 <style scoped>
 .section-wrapper {
-  background: var(--primary-color);
   isolation: isolate;
 }
 </style>
