@@ -5,13 +5,13 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0-preview AS build
 WORKDIR /src
-COPY ["Jica.csproj", "./"]
-RUN dotnet restore "Jica.csproj"
+COPY ["Jica/Jica.csproj", "Jica/"]
+RUN dotnet restore "Jica/Jica.csproj"
 COPY . .
-RUN dotnet build "Jica.csproj" -c Release -o /app/build
+RUN dotnet build "Jica/Jica.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Jica.csproj" -c Release -o /app/publish
+RUN dotnet publish "Jica/Jica.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
