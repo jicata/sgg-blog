@@ -12,10 +12,10 @@ console.log(small_svg)
   <section>
     <section-container position="relative" background-color="var(--primary-color)">
       <max-width-wrapper class="content-header__wrapper">
-          <h1 class="content-header__title">This is the title of the Article</h1>
-          <span class="content-header__subtitle">This is the subtitle of the article</span>
+          <h1 class="content-header__title">Lorem Ipsum Dolor Sit Amet</h1>
+          <span class="content-header__subtitle">Consectetur adipiscing elit</span>
         <div style="display: flex;">
-          <span class="content-header__info">This is the additional info</span>
+          <span class="content-header__info">Sed do eiusmod tempor incididunt</span>
         </div>
       </max-width-wrapper>
       <div class="content-header__background-container">
@@ -41,49 +41,33 @@ console.log(small_svg)
           </template>
           <template v-slot:nav-menu__items>
             <li>
-              <a href="#"> Go here</a>
+              <a href="#">Section 1</a>
             </li>
             <li>
-              <a href="#"> Go here</a>
+              <a href="#">Section 2</a>
             </li>
           </template>
         </SideNav>
-        <p class="content__paragraph"> The most exciting thing about container queries, in my
-          opinion, is that they expand what’s possible in terms of user interface design. They give
-          us new options when it comes to responsive design, creating UIs that would be impractical
-          or impossible using traditional media queries. </p>
-        <p class="content__paragraph"> In this post, I’ll share the most useful pattern I’ve
-          discovered, so that you can start taking full advantage of container queries in your own
-          work.</p>
+        <p class="content__paragraph">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        <p class="content__paragraph">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
         <aside class="content__aside">
           <strong>Intended audience</strong>
           <p class="content__paragraph">
-            This blog post assumes that you understand the fundamentals of CSS container queries. If
-            you’re still getting the hang of them, you may wish to start with my other post,
+            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.
           </p>
         </aside>
-        <h2 class="content__heading">The killer pattern</h2>
+        <h2 class="content__heading">The Main Section</h2>
         <div id="the-killer-pattern" style="max-width: 686px" class="content__image-contained">
           <img src="../assets/images/img.png" alt="" />
         </div>
-        <p class="content__paragraph">This layout is used to display newsletter issues.</p>
-        <p class="content__paragraph">On desktop, it’s a two-column layout. The email metadata on
-          the left, the content on the right. On mobile/tablet, it collapses to a single column:</p>
+        <p class="content__paragraph">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+        <p class="content__paragraph">Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.</p>
         <div id="the-killer-pattern" class="content__image-contained"
              style="max-width: 328px">
           <img src="../assets/images/image2.png" alt="" />
         </div>
-        <p class="content__paragraph">This is a pretty common design pattern, and it’s easily solved
-          using media queries, but it leads to a curious side-effect: the width of each column
-          actually <em class="DonthaveANameYet" style="color: inherit;">increases</em> when the
-          viewport shrinks below the mobile threshold.</p>
-        <p class="content__paragraph">Keep your eye on the width of the left-hand column as you
-          shrink the (virtual) window, using the slider:</p>
-        <!--        <div class="content__interactive">-->
-        <!--          <div class="content__interactive__wrapper">-->
-        <!--            <p style="color:white">Interactive Content</p>-->
-        <!--          </div>-->
-        <!--        </div>-->
+        <p class="content__paragraph">Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.</p>
+        <p class="content__paragraph">Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
         <div class="content__end">
           <div class="content__end-date">
             <h3 class="content__end-header">
