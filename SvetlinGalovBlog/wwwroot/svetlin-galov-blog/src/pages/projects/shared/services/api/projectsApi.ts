@@ -1,8 +1,4 @@
 import {Project, ProjectShort} from "../../types/project.ts";
-import React from "react";
-
-const BASE_URL = import.meta.env.VITE_API_URL
-    ?? 'https://localhost:5001/api';
 
 const allProjects: Project[] = [
     {
@@ -60,7 +56,7 @@ const allProjects: Project[] = [
         ],
         slug: "vsg"
     },
-].reverse();
+];
 
 const allProjectsShort: ProjectShort[] = [
     {
@@ -80,9 +76,6 @@ const allProjectsShort: ProjectShort[] = [
 
 const getAll = async (): Promise<Project[]> => {
     return allProjects;
-    const response = await fetch(`${BASE_URL}/projects`);
-    if (!response.ok) throw new Error('Failed to fetch projects');
-    return response.json();
 }
 
 const getBySlug = async (slug: string): Promise<Project> => {
@@ -93,24 +86,16 @@ const getBySlug = async (slug: string): Promise<Project> => {
     }
 
     return projectBySlug;
-
-    const response = await fetch(`${BASE_URL}/projects`);
-    if (!response.ok) throw new Error('Failed to fetch projects');
-    return response.json();
 }
 
 const getShortBySlug = async (slug: string): Promise<ProjectShort> => {
     const projectBySlug = allProjectsShort.find(c => c.slug === slug);
-    
+
     if (!projectBySlug) {
         throw new Error(`Project with slug ${slug} not found`);
     }
-    
+
     return projectBySlug;
-    
-    const response = await fetch(`${BASE_URL}/projects/${slug}`);
-    if(!response.ok) throw new Error('Failed to fetch projects');
-    return response.json();
 }
 
 const getAllProjectsShort = async ():Promise<ProjectShort[]> => {
