@@ -56,9 +56,10 @@ describe('Navbar', () => {
   it('hamburger toggle opens and closes menu', () => {
     renderNavbar();
     const toggle = screen.getByRole('button', { name: /menu/i });
-    expect(screen.getByRole('navigation')).not.toHaveClass('navbar__menu--open');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(toggle);
-    // After clicking toggle, menu should be marked open via data-open or aria-expanded
-    expect(toggle).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 });

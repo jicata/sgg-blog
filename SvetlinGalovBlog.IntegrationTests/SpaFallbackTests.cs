@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace SvetlinGalovBlog.IntegrationTests;
@@ -40,15 +39,5 @@ public class SpaFallbackTests : IClassFixture<SpaWebApplicationFactory>
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("<div id=\"root\">", content);
-    }
-}
-
-public class SpaWebApplicationFactory : WebApplicationFactory<Program>
-{
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        var wwwrootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-
-        builder.UseSetting("webroot", wwwrootPath);
     }
 }
