@@ -1,13 +1,13 @@
 import './NavbarMenu.css';
 import NavbarItem from "./navbar-item/NavbarItem.tsx";
-import {useLocation} from "react-router";
+import {useLocation} from "react-router-dom";
 
 const NAV_ITEMS = [
-    {to: "/", label: "Blog"},
+    {to: "/", label: "Home"},
     {to: "/projects", label: "Projects"},
-    {to: "/contact", label: "Contacts"},
     {to: "/about", label: "About"},
-]
+    {to: "/contact", label: "Contact"},
+];
 
 interface NavbarMenuProps {
     isOpen: boolean;
@@ -15,7 +15,7 @@ interface NavbarMenuProps {
 
 const NavbarMenu = ({isOpen} : NavbarMenuProps) => {
     const { pathname } = useLocation();
-    
+
     return (
         <div className={`navbar__menu ${isOpen ? 'navbar__menu--open' : ''}`}>
             <ul className="navbar__items">
@@ -24,13 +24,13 @@ const NavbarMenu = ({isOpen} : NavbarMenuProps) => {
                         key={index}
                         to={item.to}
                         label={item.label}
-                        active={pathname === item.to}>
-                    </NavbarItem>
+                        active={pathname === item.to}
+                    />
                 ))}
             </ul>
-            <img src="../../../../public/IF_inyoface.png" className="menu__marine" alt="BOLTER"/>
+            <img src="/IF_inyoface.png" className="menu__marine" alt="BOLTER"/>
         </div>
-    )
+    );
 }
 
 export default NavbarMenu;

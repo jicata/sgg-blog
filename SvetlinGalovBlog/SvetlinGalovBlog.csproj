@@ -1,67 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <SpaRoot>wwwroot\svetlin-galov-blog\</SpaRoot>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\articles\articles.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\articles\articles.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\articles\article\article.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\articles\article\article.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\contact\contact.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\contact\contact.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\categories\categories.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\categories\categories.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\categories\category\category.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\categories\category\category.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\content-navigation.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\content-navigation.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\popular-contents\popular-contents.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\popular-contents\popular-contents.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\popular-contents\popular-content\popular-content.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\content-navigation\popular-contents\popular-content\popular-content.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\main-content.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\main-content\main-content.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\home\Contact\contact.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\home\Contact\contact.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\article\ArticleContent\ArticleContent.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\article\ArticleContent\ArticleContent.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\Content\ContentWrapper\ContentWrapper.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\components\Content\ContentWrapper\ContentWrapper.jsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\diving-deeper-01-project-introducing-the-box-model-starting-code\favicon.png" />
-      <_ContentIncludedByDefault Remove="wwwroot\diving-deeper-01-project-introducing-the-box-model-starting-code\index.html" />
-      <_ContentIncludedByDefault Remove="wwwroot\diving-deeper-01-project-introducing-the-box-model-starting-code\main.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\practicing-basics-01.01-html-code-plans\index.html" />
-      <_ContentIncludedByDefault Remove="wwwroot\practicing-basics-01.01-html-code-plans\__MACOSX\._index.html" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\project\Achievement\Achievement.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\project\achievements\Achievements.tsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\content\dowjones.mdx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\content\softuni.mdx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\content\vsg.mdx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\mdx\components\section-label\SectionLabel.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\mdx\components\section-label\SectionLabel.tsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\mdx\content\dowjones.mdx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\mdx\content\softuni.mdx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\mdx\content\vsg.mdx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\before-after-card\BeforeAfterCard.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\before-after-card\BeforeAfterCard.tsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\stat-card\StatCard.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\stat-card\StatCard.tsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\text-card\TextCard.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\text-card\TextCard.tsx" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\unordered-list\UnorderedList.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\svetlin-galov-blog\src\pages\projects\details\components\unordered-list\UnorderedList.tsx" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="wwwroot\svetlin-galov-blog\src\pages\projects\list\" />
-    </ItemGroup>
+    <Target Name="PublishSpa" BeforeTargets="Publish">
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+    </Target>
 
 </Project>
