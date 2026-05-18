@@ -15,7 +15,7 @@ const TextCard = ({ bulletNumber, heading, children = '' }: TextCardProps) => {
                 paddingBottom: 'var(--space-4)',
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
-                alignItems: { xs: 'flex-start', md: 'flex-start' },
+                alignItems: 'flex-start',
                 gap: { xs: 'var(--space-2)', md: 'var(--space-6)' },
                 '& + &': {
                     marginTop: 0,

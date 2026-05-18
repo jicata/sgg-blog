@@ -1,7 +1,6 @@
 import { Box } from '@mui/material';
 
 interface ClusterProps {
-    className?: string;
     children: React.ReactNode;
 }
 
