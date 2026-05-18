@@ -1,20 +1,79 @@
-import './footer.css'
+import { Box, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 
-const Footer = () => {
-    return (
-        <footer className="main-footer">
-            <nav>
-                <ul className="main-footer__links">
-                    <li className="main-footer__link">
-                        <a href="/">Support</a>
-                    </li>
-                    <li className="main-footer__link">
-                        <a href="/">Terms of Use</a>
-                    </li>
-                </ul>
-            </nav>
-        </footer>
-    )
-}
+const footerTextSx: SxProps<Theme> = {
+  fontFamily: 'var(--font-display)',
+  fontSize: (theme) => theme.typography.body2.fontSize,
+  fontWeight: 500,
+  color: 'var(--fg-muted)',
+};
 
-export default Footer
+const footerLinkSx: SxProps<Theme> = {
+  ...footerTextSx,
+  textDecoration: 'none',
+  '&:hover': { color: 'var(--fg)' },
+};
+
+const Footer = () => (
+  <Box
+    component="footer"
+    sx={{
+      borderTop: '1px solid var(--border)',
+      mt: 'var(--space-9)',
+      py: 'var(--space-6)',
+      px: 'var(--space-5)',
+    }}
+  >
+    <Box
+      sx={{
+        maxWidth: 'var(--container)',
+        mx: 'auto',
+        display: 'flex',
+        gap: 'var(--space-5)',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+      }}
+    >
+      <Typography sx={{ ...footerTextSx, mr: 'auto' }}>
+        © {new Date().getFullYear()} Svetlin Galov
+      </Typography>
+
+      <Box
+        component="nav"
+        aria-label="Footer navigation"
+        sx={{ display: 'flex', gap: 'var(--space-5)' }}
+      >
+        <Box
+          component="a"
+          href="mailto:svetlingalov@gmail.com"
+          aria-label="Email"
+          sx={footerLinkSx}
+        >
+          Email
+        </Box>
+        <Box
+          component="a"
+          href="https://github.com/jicata"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="GitHub"
+          sx={footerLinkSx}
+        >
+          GitHub
+        </Box>
+        <Box
+          component="a"
+          href="https://linkedin.com/in/svetlin-galov"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="LinkedIn"
+          sx={footerLinkSx}
+        >
+          LinkedIn
+        </Box>
+      </Box>
+    </Box>
+  </Box>
+);
+
+export default Footer;
