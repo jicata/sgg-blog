@@ -35,7 +35,7 @@ const AboutPage = () => {
     <Box
       component="main"
       id="main-content"
-      sx={{ minHeight: 'calc(100vh - 64px)', pt: 'var(--space-8)' }}
+      sx={{ minHeight: 'calc(100vh - var(--nav-height))', pt: 'var(--space-8)' }}
     >
       <Container>
         <Box
@@ -79,8 +79,8 @@ const AboutPage = () => {
                 component="h1"
                 sx={{
                   fontFamily: 'var(--font-display)',
-                  fontSize: { xs: '2rem', sm: '2.75rem' },
-                  lineHeight: 1.18,
+                  fontSize: { xs: '2rem', sm: '3.5rem' },
+                  lineHeight: { xs: 1.25, sm: 1.071 },
                   fontWeight: 600,
                   letterSpacing: '-0.01em',
                   color: 'var(--fg)',
@@ -97,7 +97,7 @@ const AboutPage = () => {
                   fontSize: '1.125rem',
                   lineHeight: 1.65,
                   color: 'var(--fg-muted)',
-                  maxWidth: 580,
+                  maxWidth: 'var(--prose-narrow)',
                   m: 0,
                 }}
               >
@@ -219,7 +219,7 @@ const AboutPage = () => {
                 fontSize: '1rem',
                 lineHeight: 1.65,
                 color: 'var(--fg-muted)',
-                maxWidth: 580,
+                maxWidth: 'var(--prose-narrow)',
                 m: 0,
               }}
             >
