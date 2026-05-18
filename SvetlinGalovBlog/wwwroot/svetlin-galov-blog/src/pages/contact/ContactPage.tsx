@@ -137,7 +137,7 @@ const ContactPage = () => {
                     <Box
                       component="span"
                       aria-hidden
-                      sx={{ ml: '6px', fontFamily: 'var(--font-mono)', opacity: 0.7 }}
+                      sx={{ ml: 'var(--space-1)', fontFamily: 'var(--font-mono)', opacity: 0.7 }}
                     >
                       ↗
                     </Box>
