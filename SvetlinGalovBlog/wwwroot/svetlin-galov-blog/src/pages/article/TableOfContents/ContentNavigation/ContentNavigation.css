@@ -1,0 +1,4 @@
+.toc-link-active {
+    font-weight: var(--font-bold);
+    color: var(--imperial-yellow);
+}

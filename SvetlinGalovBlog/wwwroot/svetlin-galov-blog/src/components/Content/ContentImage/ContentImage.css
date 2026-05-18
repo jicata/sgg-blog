@@ -1,0 +1,8 @@
+.content-image{
+    margin-bottom: 1rem;
+}
+
+.content-image__img{
+    width: 100%;
+    object-fit: cover;
+}

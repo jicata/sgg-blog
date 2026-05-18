@@ -1,0 +1,5 @@
+.paragraph {
+    margin-bottom: 1rem;
+    font-size: var(--text-lg);
+    max-width: 65ch;
+}

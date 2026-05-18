@@ -1,0 +1,16 @@
+.core-skill-card {
+    border-top: 1.5px solid var(--more-black);
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+}
+
+.text-card__heading{
+    font-weight: lighter;
+    font-size: var(--text-fluid-lg);
+    margin-bottom: 1.5rem;
+}
+
+.text-card__text{
+    margin-bottom: 2.5rem;
+    max-width: 60ch;
+}

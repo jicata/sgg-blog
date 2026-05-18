@@ -1,0 +1,10 @@
+.navbar__toggle:hover,
+.navbar__toggle:active{
+    cursor: pointer;
+}
+
+@media (min-width: 46rem) {
+    .navbar__toggle {
+        display: none;
+    }
+}

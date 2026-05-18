@@ -1,0 +1,9 @@
+.stat-card__number{
+    font-weight: var(--font-bold);
+    font-size: var(--text-4xl);
+    color: var(--imperial-yellow);
+}
+
+.stat-card__description{
+    font-size: var(--text-base);
+}

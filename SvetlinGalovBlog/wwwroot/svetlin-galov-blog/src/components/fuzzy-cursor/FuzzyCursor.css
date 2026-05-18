@@ -1,0 +1,24 @@
+.cursor-bubble {
+    position: fixed;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background: var(--imperial-yellow);
+    color: black;
+    
+    padding: 0.75rem 1.5rem;
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    z-index: 999;
+    border-radius: 50%;
+    width: 65px;
+    height: 65px;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}

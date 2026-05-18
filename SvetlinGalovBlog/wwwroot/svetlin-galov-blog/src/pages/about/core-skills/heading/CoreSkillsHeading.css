@@ -1,0 +1,21 @@
+
+.core-skills__heading{
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.core-skills__heading-text{
+
+    font-size: var(--text-fluid-xl);
+    max-width: 75%;
+}
+
+.highlighted{
+    color: var(--imperial-yellow);
+}
+
+.core-skill__subheading{
+    max-width: 60ch;
+}

@@ -1,0 +1,10 @@
+.popular-content{
+    display: block;
+    margin-bottom: 8px;
+    font-weight: var(--font-bold);
+}
+
+.popular-content::before{
+    content: "→";  /* or "→" or "•" or "★" */
+    margin-right: 8px;
+}

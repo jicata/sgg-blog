@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Playground</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 2rem;
+        }
+
+        h2 {
+            margin-bottom: 0.5rem;
+            color: #e94560;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #16213e;
+        }
+
+        /* ============================================
+           EXAMPLE 1: Track Sizing (grid-template-columns)
+           Try changing the values below!
+           ============================================ */
+        .ex1-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            /* Try: 200px 1fr */
+            /* Try: 1fr 1fr 1fr */
+            /* Try: minmax(150px, 300px) 1fr */
+            /* Try: repeat(3, 1fr) */
+            /* Try: auto 1fr */
+            gap: 12px;
+        }
+
+        /* ============================================
+           EXAMPLE 2: Row Sizing (grid-template-rows)
+           Container has a fixed height so fr works.
+           ============================================ */
+        .ex2-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr auto;
+            /* Try: 60px 1fr 40px */
+            /* Try: 1fr 2fr 1fr */
+            gap: 12px;
+            height: 400px;
+        }
+
+        /* ============================================
+           EXAMPLE 3: Placement (grid-column, grid-row)
+           Children placed into specific cells.
+           ============================================ */
+        .ex3-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 100px);
+            gap: 12px;
+        }
+
+        .ex3-wide {
+            grid-column: 1 / 3;
+            /* Try: span 2 */
+            /* Try: 2 / 5 */
+            background: #e94560 !important;
+        }
+
+        .ex3-tall {
+            grid-row: 2 / 4;
+            /* Try: span 2 */
+            background: #0f3460 !important;
+            border: 2px solid #53a8e2 !important;
+        }
+
+        /* ============================================
+           EXAMPLE 4: Alignment
+           Play with justify-items, align-items,
+           justify-self, align-self.
+           ============================================ */
+        .ex4-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+            justify-items: stretch;
+            /* Try: start, center, end, stretch */
+            align-items: stretch;
+            /* Try: start, center, end, stretch */
+        }
+
+        .ex4-grid .cell {
+            grid-column: 1;
+        }
+
+        .ex4-special {
+            grid-column: 2 !important;
+            grid-row: 1 / -1;
+            /* This child overrides the parent's alignment */
+            background: #e94560 !important;
+        }
+
+        /* ============================================
+           EXAMPLE 5: Grid Areas
+           Named template areas for semantic layouts.
+           ============================================ */
+        .ex5-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            grid-template-rows: 60px 1fr 40px;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            /* Try swapping to:
+                "header  header"
+                "sidebar main"
+                "footer  footer";
+            */
+            gap: 12px;
+            height: 350px;
+        }
+
+        .ex5-header  { grid-area: header; }
+        .ex5-sidebar { grid-area: sidebar; }
+        .ex5-main    { grid-area: main; }
+        .ex5-footer  { grid-area: footer; }
+
+        /* ============================================
+           Shared child styling
+           ============================================ */
+        .cell {
+            background: #0f3460;
+            border: 2px solid #53a8e2;
+            border-radius: 4px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="margin-bottom: 2rem; color: #e94560;">CSS Grid Playground</h1>
+
+    <!-- EXAMPLE 1 -->
+    <section>
+        <h2>1. Track Sizing</h2>
+        <p>grid-template-columns: 2fr 1fr</p>
+        <div class="ex1-grid">
+            <div class="cell">2fr</div>
+            <div class="cell">1fr</div>
+            <div class="cell">2fr</div>
+            <div class="cell">1fr</div>
+        </div>
+    </section>
+
+    <!-- EXAMPLE 2 -->
+    <section>
+        <h2>2. Row Sizing (fixed-height container)</h2>
+        <p>grid-template-rows: auto 1fr auto — height: 400px</p>
+        <div class="ex2-grid">
+            <div class="cell">Header (auto)</div>
+            <div class="cell">Nav (auto)</div>
+            <div class="cell">Main (1fr)</div>
+            <div class="cell">Sidebar (1fr)</div>
+            <div class="cell">Footer (auto)</div>
+            <div class="cell">Footer right (auto)</div>
+        </div>
+    </section>
+
+    <!-- EXAMPLE 3 -->
+    <section>
+        <h2>3. Placement &amp; Spanning</h2>
+        <p>4-column grid. Red spans columns 1-3. Blue spans rows 2-4.</p>
+        <div class="ex3-grid">
+            <div class="cell ex3-wide">col 1/3</div>
+            <div class="cell">3</div>
+            <div class="cell">4</div>
+            <div class="cell">5</div>
+            <div class="cell ex3-tall">row 2/4</div>
+            <div class="cell">7</div>
+            <div class="cell">8</div>
+            <div class="cell">9</div>
+            <div class="cell">10</div>
+        </div>
+    </section>
+
+    <!-- EXAMPLE 4 -->
+    <section>
+        <h2>4. Alignment</h2>
+        <p>justify-items: stretch — align-items: stretch — Red cell has justify-self: center, align-self: center</p>
+        <div class="ex4-grid">
+            <div class="cell">1</div>
+        
+            <div class="cell ex4-special">special</div>
+            <div class="cell">2</div>
+            <div class="cell">3</div>
+            <div class="cell">4</div>
+            <div class="cell">6</div>
+        </div>
+    </section>
+
+    <!-- EXAMPLE 5 -->
+    <section>
+        <h2>5. Grid Areas</h2>
+        <p>Named areas: sidebar | header / sidebar | main / sidebar | footer</p>
+        <div class="ex5-grid">
+            <div class="cell ex5-header">Header</div>
+            <div class="cell ex5-sidebar">Sidebar</div>
+            <div class="cell ex5-main">Main</div>
+            <div class="cell ex5-footer">Footer</div>
+        </div>
+    </section>
+
+</body>
+</html>

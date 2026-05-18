@@ -1,0 +1,28 @@
+.navbar {
+    padding: 8px 12px;
+    width: 100%;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    position: absolute;
+}
+
+.navbar--scrolled {
+    background: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
+}
+
+@media (min-width: 46rem) {
+    .navbar {
+        position: fixed;
+        align-items: flex-start;
+        flex-wrap: nowrap;
+    }
+
+    .navbar--scrolled {
+        background: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
+    }
+}
+
+

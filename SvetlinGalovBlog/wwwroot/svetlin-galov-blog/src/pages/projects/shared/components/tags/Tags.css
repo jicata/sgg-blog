@@ -1,0 +1,13 @@
+.tags{
+    display: inline-flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top:auto;
+}
+
+.tag{
+    border: 1px solid dimgray;
+    border-radius: 5px;
+    padding: 0.1rem 1rem;
+    font-size: var(--text-md);
+}

@@ -1,0 +1,29 @@
+.heading-metadata{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    font-style: italic;
+    font-weight: var(--font-light);
+    font-size: var(--text-base);
+}
+
+.heading-metadata__category-url{
+    font-style: normal;
+    font-weight: var(--font-bold);
+}
+
+.heading-metadata__date{
+    font-style: normal;
+}
+
+@media (min-width: 46rem) {
+    .heading-metadata{
+        justify-content: center;
+    }
+}
+
+@media (min-width: 67rem) {
+    .heading-metadata{
+        justify-content: start;
+    }
+}

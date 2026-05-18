@@ -1,0 +1,9 @@
+﻿.basic-card{
+    background-color: var(--almost-black);
+    border-radius: 2rem;
+    border: 1px solid var(--more-black);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}

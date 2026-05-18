@@ -1,0 +1,11 @@
+.article__preview {
+    margin: 16px 0;
+}
+
+.article__follow-up{
+    font-weight: var(--font-bold);
+}
+
+.article{
+    margin-bottom: 32px;
+}

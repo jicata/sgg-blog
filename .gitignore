@@ -52,3 +52,25 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# IDEs
+.vs/
+.idea/
+.cursor/
+.vscode/
+
+# Per-developer Claude Code permissions (do NOT share)
+.claude/settings.local.json
+
+# OS / shell crash dumps
+*.stackdump
+.DS_Store
+Thumbs.db
+
+# Design handoff bundles (local-only; not for the repo)
+*.zip
+
+# Node / Vite (covered also by nested .gitignore inside the SPA)
+node_modules/
+dist/
+dist-ssr/

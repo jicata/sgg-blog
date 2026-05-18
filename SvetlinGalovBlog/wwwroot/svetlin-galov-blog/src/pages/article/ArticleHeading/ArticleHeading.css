@@ -1,0 +1,29 @@
+.article-heading{
+    margin-bottom: 5rem;
+}
+
+.article-heading :not(h1){
+    color: #dad9d9
+}
+
+.article-heading__title{
+    margin-bottom: 1rem;
+}
+
+.article-heading__subtitle{  
+    display: block;
+    font-weight: var(--font-light);
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 46rem) {
+    .article-heading {
+        text-align: center;
+    }
+}
+
+@media (min-width: 66rem) {
+    .article-heading {
+        text-align: left;
+    }
+}

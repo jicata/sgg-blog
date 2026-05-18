@@ -1,0 +1,8 @@
+.blockquote {
+    margin-bottom: 1rem;
+    font-size: var(--text-lg);
+    border-left: gray 0.7rem double;
+    padding: 1rem;
+    margin-inline: calc(var(--viewport-padding) * -0.5);
+    background-color: #4c4545;
+}

@@ -1,0 +1,25 @@
+.table-of-contents{
+    display: none;
+}
+
+
+
+@media (min-width: 66rem) {
+    .table-of-contents{
+        display: block;
+        grid-column: 3;
+        grid-row:1/200;
+        justify-self: center;
+        align-self: start;
+        position:sticky;
+        top: 5rem;
+    }
+    .table-of-contents__title{
+        text-transform: uppercase;
+        font-size: var(--text-xl);
+    }
+    
+    .table-of-contents__list{
+        text-align: center;
+    }
+}

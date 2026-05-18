@@ -1,0 +1,30 @@
+.text-card{
+    border-bottom: 2px solid var(--more-black);
+    padding: 1rem 0;
+}
+
+.text-card__bullet-number{
+    font-size: var(--text-sm)
+}
+
+.text-card__heading{
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+
+p + .text-card {
+    margin-top: 1.5rem;
+}
+
+@media (min-width: 48rem) {
+    .text-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .text-card__heading{
+        margin-top: 0;
+    }
+}
