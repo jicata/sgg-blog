@@ -1,68 +1,40 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ProjectFrontmatter } from '../types/project';
 
-const FIXTURE_MODULES: Record<string, { frontmatter?: object }> = {
-  '../content/projects/vsg.mdx': {
-    frontmatter: {
-      slug: 'vsg',
-      title: 'VSG Bulgaria',
-      role: 'Tech Lead',
-      dates: '2024 — present',
-      summary: 'Leading backend architecture.',
-      tags: ['.NET', 'DDD', 'agentic'],
-      order: 1,
-    },
+const FIXTURE_PROJECTS: ProjectFrontmatter[] = [
+  {
+    slug: 'vsg',
+    title: 'VSG Bulgaria',
+    role: 'Tech Lead',
+    dates: '2024 — present',
+    summary: 'Leading backend architecture.',
+    tags: ['.NET', 'DDD', 'agentic'],
+    order: 1,
   },
-  '../content/projects/dowjones.mdx': {
-    frontmatter: {
-      slug: 'dowjones',
-      title: 'Dow Jones',
-      role: 'Senior Software Engineer',
-      dates: '2020 — 2024',
-      summary: 'Internal platform work.',
-      tags: ['C#', 'distributed'],
-      order: 2,
-    },
+  {
+    slug: 'dowjones',
+    title: 'Dow Jones',
+    role: 'Senior Software Engineer',
+    dates: '2020 — 2024',
+    summary: 'Internal platform work.',
+    tags: ['C#', 'distributed'],
+    order: 2,
   },
-  '../content/projects/softuni.mdx': {
-    frontmatter: {
-      slug: 'softuni',
-      title: 'SoftUni',
-      role: 'Backend Developer + Teacher',
-      dates: '2016 — 2020',
-      summary: 'Engineering and teaching.',
-      tags: ['teaching', 'C#'],
-      order: 3,
-    },
+  {
+    slug: 'softuni',
+    title: 'SoftUni',
+    role: 'Backend Developer + Teacher',
+    dates: '2016 — 2020',
+    summary: 'Engineering and teaching.',
+    tags: ['teaching', 'C#'],
+    order: 3,
   },
-};
+];
 
-vi.mock('./projectsApi', async () => {
-  const entries = Object.values(FIXTURE_MODULES)
-    .filter((m) => m.frontmatter)
-    .map((m) => m.frontmatter as {
-      slug: string;
-      title: string;
-      role: string;
-      dates: string;
-      summary: string;
-      tags: string[];
-      order: number;
-    })
-    .sort((a, b) => a.order - b.order);
-
-  return {
-    projectsQueryKeys: {
-      list: () => ['projects', 'list'] as const,
-      detail: (slug: string) => ['projects', 'detail', slug] as const,
-    },
-    getProjects: vi.fn().mockResolvedValue(entries),
-    getProjectBySlug: vi.fn((slug: string) => {
-      const found = entries.find((e) => e.slug === slug);
-      if (!found) throw new Error(`Project with slug "${slug}" not found`);
-      return Promise.resolve(found);
-    }),
-  };
-});
+vi.mock('../content/projects/index', () => ({
+  projectFrontmatterRegistry: FIXTURE_PROJECTS,
+  default: {},
+}));
 
 describe('projectsQueryKeys', () => {
   it('list() returns ["projects", "list"]', async () => {
@@ -135,5 +107,29 @@ describe('getProjects', () => {
     const su = projects.find((p) => p.slug === 'softuni');
     expect(su).toBeDefined();
     expect(su!.order).toBe(3);
+  });
+});
+
+describe('getProjects sort behaviour', () => {
+  it('sorts by order even when fixture is provided in reverse order', async () => {
+    const { projectFrontmatterRegistry } = await import('../content/projects/index');
+    const reversed = [...FIXTURE_PROJECTS].reverse();
+    (projectFrontmatterRegistry as ProjectFrontmatter[]).splice(
+      0,
+      projectFrontmatterRegistry.length,
+      ...reversed,
+    );
+
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    const orders = projects.map((p) => p.order);
+    const sorted = [...orders].sort((a, b) => a - b);
+    expect(orders).toEqual(sorted);
+
+    (projectFrontmatterRegistry as ProjectFrontmatter[]).splice(
+      0,
+      projectFrontmatterRegistry.length,
+      ...FIXTURE_PROJECTS,
+    );
   });
 });

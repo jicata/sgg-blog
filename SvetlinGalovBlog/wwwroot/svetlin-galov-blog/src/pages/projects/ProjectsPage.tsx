@@ -284,7 +284,7 @@ const ProjectsPage = () => {
                 display: 'grid',
                 gridTemplateColumns: {
                   xs: '1fr',
-                  md: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  sm: 'repeat(auto-fit, minmax(260px, 1fr))',
                 },
                 gap: 'var(--space-4)',
               }}
