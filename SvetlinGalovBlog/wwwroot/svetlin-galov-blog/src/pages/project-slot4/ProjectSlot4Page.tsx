@@ -126,7 +126,7 @@ const ProjectSlot4Page = () => {
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.0625rem',
+                  fontSize: 'var(--text-body-l)',
                   lineHeight: 1.7,
                   color: 'var(--fg)',
                   m: 0,
@@ -161,7 +161,7 @@ const ProjectSlot4Page = () => {
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.0625rem',
+                  fontSize: 'var(--text-body-l)',
                   lineHeight: 1.7,
                   color: 'var(--fg-muted)',
                   m: 0,
@@ -190,7 +190,7 @@ STOP and surface the size delta. Do not silently scope-creep.`}
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.0625rem',
+                  fontSize: 'var(--text-body-l)',
                   lineHeight: 1.7,
                   color: 'var(--fg-muted)',
                   m: 0,
@@ -240,7 +240,7 @@ If asked to "just add a quick endpoint," push back: name what the slice would be
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.0625rem',
+                  fontSize: 'var(--text-body-l)',
                   lineHeight: 1.7,
                   color: 'var(--fg-muted)',
                   m: 0,
@@ -298,7 +298,7 @@ you are in the wrong layer.
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.0625rem',
+                  fontSize: 'var(--text-body-l)',
                   lineHeight: 1.7,
                   color: 'var(--fg-muted)',
                   fontStyle: 'italic',
@@ -334,7 +334,7 @@ you are in the wrong layer.
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.0625rem',
+                  fontSize: 'var(--text-body-l)',
                   lineHeight: 1.7,
                   color: 'var(--fg-muted)',
                   m: 0,
