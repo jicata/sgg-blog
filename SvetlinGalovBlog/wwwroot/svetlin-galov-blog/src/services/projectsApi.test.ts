@@ -1,0 +1,139 @@
+import { describe, it, expect, vi } from 'vitest';
+
+const FIXTURE_MODULES: Record<string, { frontmatter?: object }> = {
+  '../content/projects/vsg.mdx': {
+    frontmatter: {
+      slug: 'vsg',
+      title: 'VSG Bulgaria',
+      role: 'Tech Lead',
+      dates: '2024 — present',
+      summary: 'Leading backend architecture.',
+      tags: ['.NET', 'DDD', 'agentic'],
+      order: 1,
+    },
+  },
+  '../content/projects/dowjones.mdx': {
+    frontmatter: {
+      slug: 'dowjones',
+      title: 'Dow Jones',
+      role: 'Senior Software Engineer',
+      dates: '2020 — 2024',
+      summary: 'Internal platform work.',
+      tags: ['C#', 'distributed'],
+      order: 2,
+    },
+  },
+  '../content/projects/softuni.mdx': {
+    frontmatter: {
+      slug: 'softuni',
+      title: 'SoftUni',
+      role: 'Backend Developer + Teacher',
+      dates: '2016 — 2020',
+      summary: 'Engineering and teaching.',
+      tags: ['teaching', 'C#'],
+      order: 3,
+    },
+  },
+};
+
+vi.mock('./projectsApi', async () => {
+  const entries = Object.values(FIXTURE_MODULES)
+    .filter((m) => m.frontmatter)
+    .map((m) => m.frontmatter as {
+      slug: string;
+      title: string;
+      role: string;
+      dates: string;
+      summary: string;
+      tags: string[];
+      order: number;
+    })
+    .sort((a, b) => a.order - b.order);
+
+  return {
+    projectsQueryKeys: {
+      list: () => ['projects', 'list'] as const,
+      detail: (slug: string) => ['projects', 'detail', slug] as const,
+    },
+    getProjects: vi.fn().mockResolvedValue(entries),
+    getProjectBySlug: vi.fn((slug: string) => {
+      const found = entries.find((e) => e.slug === slug);
+      if (!found) throw new Error(`Project with slug "${slug}" not found`);
+      return Promise.resolve(found);
+    }),
+  };
+});
+
+describe('projectsQueryKeys', () => {
+  it('list() returns ["projects", "list"]', async () => {
+    const { projectsQueryKeys } = await import('./projectsApi');
+    expect(projectsQueryKeys.list()).toEqual(['projects', 'list']);
+  });
+
+  it('detail(slug) returns ["projects", "detail", slug]', async () => {
+    const { projectsQueryKeys } = await import('./projectsApi');
+    expect(projectsQueryKeys.detail('vsg')).toEqual(['projects', 'detail', 'vsg']);
+  });
+});
+
+describe('getProjects', () => {
+  it('returns an array of project entries', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    expect(Array.isArray(projects)).toBe(true);
+  });
+
+  it('returns 3 entries (vsg, dowjones, softuni)', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    expect(projects).toHaveLength(3);
+  });
+
+  it('each entry has required frontmatter fields', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    for (const p of projects) {
+      expect(p).toHaveProperty('slug');
+      expect(p).toHaveProperty('title');
+      expect(p).toHaveProperty('role');
+      expect(p).toHaveProperty('dates');
+      expect(p).toHaveProperty('summary');
+      expect(p).toHaveProperty('tags');
+      expect(p).toHaveProperty('order');
+      expect(Array.isArray(p.tags)).toBe(true);
+      expect(typeof p.order).toBe('number');
+    }
+  });
+
+  it('entries are sorted by order ascending', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    const orders = projects.map((p) => p.order);
+    const sorted = [...orders].sort((a, b) => a - b);
+    expect(orders).toEqual(sorted);
+  });
+
+  it('vsg entry has order 1', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    const vsg = projects.find((p) => p.slug === 'vsg');
+    expect(vsg).toBeDefined();
+    expect(vsg!.order).toBe(1);
+  });
+
+  it('dowjones entry has order 2', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    const dj = projects.find((p) => p.slug === 'dowjones');
+    expect(dj).toBeDefined();
+    expect(dj!.order).toBe(2);
+  });
+
+  it('softuni entry has order 3', async () => {
+    const { getProjects } = await import('./projectsApi');
+    const projects = await getProjects();
+    const su = projects.find((p) => p.slug === 'softuni');
+    expect(su).toBeDefined();
+    expect(su!.order).toBe(3);
+  });
+});

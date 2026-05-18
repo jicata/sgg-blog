@@ -8,7 +8,7 @@ import { theme } from './theme/theme';
 import MainLayout from './layouts/MainLayout.tsx';
 import HomePage from './pages/home/HomePage';
 import Contact from './pages/contact/contact.jsx';
-import ProjectsList from './pages/projects/list/ProjectsList.tsx';
+import ProjectsPage from './pages/projects/ProjectsPage.tsx';
 import ProjectDetails from './pages/projects/details/ProjectDetails.tsx';
 import ProjectDetailsLayout from './layouts/projects/ProjectDetailsLayout.tsx';
 import BaseLayout from './layouts/BaseLayout.tsx';
@@ -26,7 +26,7 @@ const router = createBrowserRouter([
                 children: [
                     { path: '/', element: <HomePage /> },
                     { path: '/contact', element: <Contact /> },
-                    { path: '/projects', element: <ProjectsList /> },
+                    { path: '/projects', element: <ProjectsPage /> },
                 ],
             },
             {
