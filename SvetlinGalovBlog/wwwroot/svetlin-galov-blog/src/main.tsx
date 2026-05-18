@@ -14,6 +14,7 @@ import ProjectDetailsLayout from './layouts/projects/ProjectDetailsLayout.tsx';
 import BaseLayout from './layouts/BaseLayout.tsx';
 import AboutPage from './pages/about/AboutPage';
 import NotFoundPage from './pages/not-found/NotFoundPage.tsx';
+import ProjectSlot4Page from './pages/project-slot4/ProjectSlot4Page.tsx';
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,12 @@ const router = createBrowserRouter([
                     { path: '/', element: <HomePage /> },
                     { path: '/contact', element: <Contact /> },
                     { path: '/projects', element: <ProjectsPage /> },
+                ],
+            },
+            {
+                element: <MainLayout />,
+                children: [
+                    { path: '/projects/this-site-agent-augmented', element: <ProjectSlot4Page /> },
                 ],
             },
             {
