@@ -1,0 +1,62 @@
+# Deploy SvetlinGalovBlog to Azure App Service
+#
+# Prerequisites (one-time manual setup — see README.md for steps):
+#   1. Create an Azure App Service (Free or B1 tier, .NET 8, Linux).
+#   2. In the Azure portal → App Service → Deployment Center → GitHub Actions,
+#      download the publish profile XML.
+#   3. In GitHub → Settings → Secrets and variables → Actions, add:
+#        AZURE_WEBAPP_PUBLISH_PROFILE  ← paste the full XML from step 2
+#        AZURE_WEBAPP_NAME             ← your App Service name (e.g. sgg-blog)
+#   4. (Optional) Add a custom domain + TLS in Azure portal after first deploy.
+#
+# The workflow runs dotnet publish, which triggers the csproj PublishSpa target
+# (npm install + npm run build) automatically, so the SPA is always fresh.
+
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: 'SvetlinGalovBlog/SvetlinGalovBlog.csproj'
+  PUBLISH_DIR: './publish'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'SvetlinGalovBlog/wwwroot/svetlin-galov-blog/package-lock.json'
+
+      - name: Restore .NET dependencies
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Publish (triggers npm install + npm run build via csproj target)
+        run: >
+          dotnet publish ${{ env.PROJECT_PATH }}
+          --configuration Release
+          --output ${{ env.PUBLISH_DIR }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.PUBLISH_DIR }}

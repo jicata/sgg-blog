@@ -43,4 +43,20 @@ describe('usePageMeta', () => {
     const meta = document.querySelector('meta[name="description"]');
     expect(meta).toBeNull();
   });
+
+  it('sets og:image to default /og-image.png when og block provided without image', () => {
+    renderHook(() => usePageMeta({ title: 'Test', og: { title: 'OG Title' } }));
+    const meta = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
+    expect(meta).not.toBeNull();
+    expect(meta.content).toBe('/og-image.png');
+  });
+
+  it('uses provided og:image when explicitly set', () => {
+    renderHook(() =>
+      usePageMeta({ title: 'Test', og: { title: 'OG Title', image: '/custom.png' } }),
+    );
+    const meta = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
+    expect(meta).not.toBeNull();
+    expect(meta.content).toBe('/custom.png');
+  });
 });
