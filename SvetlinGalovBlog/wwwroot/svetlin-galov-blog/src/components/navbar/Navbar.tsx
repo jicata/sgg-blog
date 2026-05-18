@@ -1,15 +1,14 @@
-import './navbar.css'
-import {useEffect, useState} from "react";
-import useLockBodyScroll from "../../hooks/useLockBodyScroll.tsx";
-import NavbarLogo from "./navbar-logo/NavbarLogo.tsx";
-import NavbarToggle from "./navbar-toggle/NavbarToggle.tsx";
-import NavbarMenu from "./navbar-menu/NavbarMenu.tsx";
+import './navbar.css';
+import { useEffect, useState } from 'react';
+import useLockBodyScroll from '../../hooks/useLockBodyScroll.tsx';
+import NavbarLogo from './navbar-logo/NavbarLogo.tsx';
+import NavbarToggle from './navbar-toggle/NavbarToggle.tsx';
+import NavbarMenu from './navbar-menu/NavbarMenu.tsx';
 
 const Navbar = () => {
-    const remInPixels = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const [isPastHeader, setIsPastHeader] = useState(false);
     const [hamburgerMenuIsOpened, setHamburgerMenuIsOpened] = useState(false);
-    
+
     useLockBodyScroll(hamburgerMenuIsOpened);
 
     useEffect(() => {
@@ -24,7 +23,7 @@ const Navbar = () => {
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(min-width: 46rem)');
-        
+
         const handleBreakpointChange = () => {
             setHamburgerMenuIsOpened(false);
         };
@@ -36,15 +35,15 @@ const Navbar = () => {
 
     const handleNavbarToggle = () => {
         setHamburgerMenuIsOpened(!hamburgerMenuIsOpened);
-    }
+    };
 
     return (
         <nav className={`navbar ${isPastHeader ? 'navbar--scrolled' : ''}`}>
-            <NavbarLogo/>
-            <NavbarToggle onToggle={handleNavbarToggle} />
+            <NavbarLogo />
+            <NavbarToggle onToggle={handleNavbarToggle} isOpen={hamburgerMenuIsOpened} />
             <NavbarMenu isOpen={hamburgerMenuIsOpened} />
         </nav>
-    )
-}
+    );
+};
 
 export default Navbar;
