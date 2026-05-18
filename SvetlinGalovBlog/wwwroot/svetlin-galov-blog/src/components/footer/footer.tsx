@@ -1,4 +1,18 @@
 import { Box, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
+
+const footerTextSx: SxProps<Theme> = {
+  fontFamily: 'var(--font-display)',
+  fontSize: (theme) => theme.typography.body2.fontSize,
+  fontWeight: 500,
+  color: 'var(--fg-muted)',
+};
+
+const footerLinkSx: SxProps<Theme> = {
+  ...footerTextSx,
+  textDecoration: 'none',
+  '&:hover': { color: 'var(--fg)' },
+};
 
 const Footer = () => (
   <Box
@@ -20,15 +34,7 @@ const Footer = () => (
         flexWrap: 'wrap',
       }}
     >
-      <Typography
-        sx={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '0.9375rem',
-          fontWeight: 500,
-          color: 'var(--fg-muted)',
-          mr: 'auto',
-        }}
-      >
+      <Typography sx={{ ...footerTextSx, mr: 'auto' }}>
         © {new Date().getFullYear()} Svetlin Galov
       </Typography>
 
@@ -41,14 +47,7 @@ const Footer = () => (
           component="a"
           href="mailto:svetlingalov@gmail.com"
           aria-label="Email"
-          sx={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '0.9375rem',
-            fontWeight: 500,
-            color: 'var(--fg-muted)',
-            textDecoration: 'none',
-            '&:hover': { color: 'var(--fg)' },
-          }}
+          sx={footerLinkSx}
         >
           Email
         </Box>
@@ -58,14 +57,7 @@ const Footer = () => (
           target="_blank"
           rel="noreferrer"
           aria-label="GitHub"
-          sx={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '0.9375rem',
-            fontWeight: 500,
-            color: 'var(--fg-muted)',
-            textDecoration: 'none',
-            '&:hover': { color: 'var(--fg)' },
-          }}
+          sx={footerLinkSx}
         >
           GitHub
         </Box>
@@ -75,14 +67,7 @@ const Footer = () => (
           target="_blank"
           rel="noreferrer"
           aria-label="LinkedIn"
-          sx={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '0.9375rem',
-            fontWeight: 500,
-            color: 'var(--fg-muted)',
-            textDecoration: 'none',
-            '&:hover': { color: 'var(--fg)' },
-          }}
+          sx={footerLinkSx}
         >
           LinkedIn
         </Box>
