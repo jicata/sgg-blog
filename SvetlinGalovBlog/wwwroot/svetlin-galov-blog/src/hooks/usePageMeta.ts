@@ -42,7 +42,7 @@ export function usePageMeta({ title, description, og }: PageMeta): void {
     if (og) {
       if (og.title) setMeta('og:title', og.title, true);
       if (og.description) setMeta('og:description', og.description, true);
-      if (og.image) setMeta('og:image', og.image, true);
+      setMeta('og:image', og.image ?? '/og-image.png', true);
       if (og.url) setMeta('og:url', og.url, true);
       if (og.type) setMeta('og:type', og.type, true);
     }
@@ -53,7 +53,7 @@ export function usePageMeta({ title, description, og }: PageMeta): void {
       if (og) {
         if (og.title) removeMeta('og:title', true);
         if (og.description) removeMeta('og:description', true);
-        if (og.image) removeMeta('og:image', true);
+        removeMeta('og:image', true);
         if (og.url) removeMeta('og:url', true);
         if (og.type) removeMeta('og:type', true);
       }
