@@ -59,4 +59,15 @@ describe('usePageMeta', () => {
     expect(meta).not.toBeNull();
     expect(meta.content).toBe('/custom.png');
   });
+
+  it('removes og:image on unmount when og block provided without explicit image', () => {
+    const { unmount } = renderHook(() =>
+      usePageMeta({ title: 'Test', og: { title: 'OG Title' } }),
+    );
+    const metaBefore = document.querySelector('meta[property="og:image"]');
+    expect(metaBefore).not.toBeNull();
+    unmount();
+    const metaAfter = document.querySelector('meta[property="og:image"]');
+    expect(metaAfter).toBeNull();
+  });
 });

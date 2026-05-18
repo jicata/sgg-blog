@@ -53,7 +53,7 @@ export function usePageMeta({ title, description, og }: PageMeta): void {
       if (og) {
         if (og.title) removeMeta('og:title', true);
         if (og.description) removeMeta('og:description', true);
-        if (og.image) removeMeta('og:image', true);
+        removeMeta('og:image', true);
         if (og.url) removeMeta('og:url', true);
         if (og.type) removeMeta('og:type', true);
       }
