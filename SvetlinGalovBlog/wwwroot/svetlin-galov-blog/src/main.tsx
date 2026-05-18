@@ -12,8 +12,7 @@ import ProjectsList from './pages/projects/list/ProjectsList.tsx';
 import ProjectDetails from './pages/projects/details/ProjectDetails.tsx';
 import ProjectDetailsLayout from './layouts/projects/ProjectDetailsLayout.tsx';
 import BaseLayout from './layouts/BaseLayout.tsx';
-import About from './pages/about/About.tsx';
-import AboutLayout from './layouts/about/AboutLayout.tsx';
+import AboutPage from './pages/about/AboutPage';
 import NotFoundPage from './pages/not-found/NotFoundPage.tsx';
 
 const queryClient = new QueryClient();
@@ -36,12 +35,7 @@ const router = createBrowserRouter([
                     { path: '/projects/:name', element: <ProjectDetails /> },
                 ],
             },
-            {
-                element: <AboutLayout />,
-                children: [
-                    { path: '/about', element: <About /> },
-                ],
-            },
+            { path: '/about', element: <AboutPage /> },
             { path: '*', element: <NotFoundPage /> },
         ],
     },

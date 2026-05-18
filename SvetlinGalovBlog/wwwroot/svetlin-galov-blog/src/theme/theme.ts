@@ -119,6 +119,11 @@ export const theme = createTheme({
           --ease: cubic-bezier(0.2, 0, 0, 1);
           --container: 1120px;
           --prose: 720px;
+          --prose-narrow: 580px;
+          --nav-height: 64px;
+          --text-body-xl: 1.125rem;
+          --text-body-l: 1.0625rem;
+          --text-label: 0.9375rem;
           color-scheme: dark;
         }
         *, *::before, *::after { box-sizing: border-box; }
