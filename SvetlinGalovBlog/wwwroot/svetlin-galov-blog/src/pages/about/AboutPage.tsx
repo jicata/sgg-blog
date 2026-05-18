@@ -111,7 +111,7 @@ const AboutPage = () => {
             component="section"
             aria-label="Story"
             sx={{
-              maxWidth: 720,
+              maxWidth: 'var(--prose)',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.85em',
