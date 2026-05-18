@@ -94,7 +94,7 @@ const AboutPage = () => {
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.125rem',
+                  fontSize: 'var(--text-body-xl)',
                   lineHeight: 1.65,
                   color: 'var(--fg-muted)',
                   maxWidth: 'var(--prose-narrow)',
@@ -121,7 +121,7 @@ const AboutPage = () => {
               component="p"
               sx={{
                 fontFamily: 'var(--font-body)',
-                fontSize: '1.0625rem',
+                fontSize: 'var(--text-body-l)',
                 lineHeight: 1.7,
                 color: 'var(--fg)',
                 m: 0,
@@ -143,7 +143,7 @@ const AboutPage = () => {
               component="p"
               sx={{
                 fontFamily: 'var(--font-body)',
-                fontSize: '1.0625rem',
+                fontSize: 'var(--text-body-l)',
                 lineHeight: 1.7,
                 color: 'var(--fg-muted)',
                 m: 0,
@@ -167,7 +167,7 @@ const AboutPage = () => {
               component="p"
               sx={{
                 fontFamily: 'var(--font-body)',
-                fontSize: '1.0625rem',
+                fontSize: 'var(--text-body-l)',
                 lineHeight: 1.7,
                 color: 'var(--fg-muted)',
                 m: 0,
@@ -240,7 +240,7 @@ const AboutPage = () => {
                 aria-label="svetlingalov@gmail.com"
                 sx={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.9375rem',
+                  fontSize: 'var(--text-label)',
                   fontWeight: 500,
                   color: 'var(--accent)',
                   textDecoration: 'none',
@@ -257,7 +257,7 @@ const AboutPage = () => {
                 aria-label="GitHub"
                 sx={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.9375rem',
+                  fontSize: 'var(--text-label)',
                   fontWeight: 500,
                   color: 'var(--fg-muted)',
                   textDecoration: 'none',
@@ -277,7 +277,7 @@ const AboutPage = () => {
                 aria-label="LinkedIn"
                 sx={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.9375rem',
+                  fontSize: 'var(--text-label)',
                   fontWeight: 500,
                   color: 'var(--fg-muted)',
                   textDecoration: 'none',
