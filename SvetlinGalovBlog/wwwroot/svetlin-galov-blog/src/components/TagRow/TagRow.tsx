@@ -14,8 +14,8 @@ const TagRow = ({ tags, gap = 6 }: TagRowProps) => (
       gap: typeof gap === 'number' ? `${gap}px` : gap,
     }}
   >
-    {tags.map((tag, i) => (
-      <Tag key={i}>{tag}</Tag>
+    {tags.map((tag) => (
+      <Tag key={tag}>{tag}</Tag>
     ))}
   </Box>
 );

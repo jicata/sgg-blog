@@ -42,11 +42,11 @@ describe('Card', () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onClick on Enter key', () => {
+  it('does not double-fire onClick on Enter key (native button handles Enter natively)', () => {
     const handler = vi.fn();
     renderCard({ onClick: handler });
     fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
-    expect(handler).toHaveBeenCalledTimes(1);
+    expect(handler).not.toHaveBeenCalled();
   });
 
   it('calls onClick on Space key', () => {

@@ -19,7 +19,7 @@ const ArrowLink = ({ children, href, external = false, dim = false }: ArrowLinkP
       fontSize: '0.9375rem',
       fontWeight: 500,
       color: dim ? 'var(--fg-muted)' : 'var(--accent)',
-      textDecoration: 'underline',
+      textDecoration: 'none',
       textUnderlineOffset: '0.15em',
       textDecorationThickness: '1px',
       cursor: 'pointer',
@@ -29,6 +29,7 @@ const ArrowLink = ({ children, href, external = false, dim = false }: ArrowLinkP
       transition: 'color var(--duration) var(--ease)',
       '&:hover': {
         color: dim ? 'var(--fg)' : 'var(--accent-strong)',
+        textDecoration: 'underline',
         textDecorationThickness: '2px',
       },
     }}

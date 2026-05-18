@@ -13,7 +13,7 @@ const Card = ({ children, onClick, padding = 'var(--space-6)', radius = 'var(--r
   const interactive = !!onClick;
 
   const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === ' ') {
       e.preventDefault();
       onClick?.(e as unknown as MouseEvent<HTMLButtonElement>);
     }
@@ -49,7 +49,7 @@ const Card = ({ children, onClick, padding = 'var(--space-6)', radius = 'var(--r
             background: 'var(--surface-2)',
             borderColor: 'var(--border-strong)',
           },
-          '&:focus-within': {
+          '&:focus-visible': {
             outline: '2px solid var(--focus)',
             outlineOffset: '2px',
           },
