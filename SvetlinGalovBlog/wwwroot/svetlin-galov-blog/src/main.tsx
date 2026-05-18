@@ -28,11 +28,6 @@ const router = createBrowserRouter([
                     { path: '/', element: <HomePage /> },
                     { path: '/contact', element: <Contact /> },
                     { path: '/projects', element: <ProjectsPage /> },
-                ],
-            },
-            {
-                element: <MainLayout />,
-                children: [
                     { path: '/projects/this-site-agent-augmented', element: <ProjectSlot4Page /> },
                 ],
             },

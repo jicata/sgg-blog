@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Box } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../hooks/usePageMeta';
@@ -19,7 +20,7 @@ const SectionDivider = () => (
   />
 );
 
-const ProseSection = ({ children }: { children: React.ReactNode }) => (
+const ProseSection = ({ children }: { children: ReactNode }) => (
   <Box
     component="section"
     sx={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
@@ -79,11 +80,10 @@ const ProjectSlot4Page = () => {
                 component="p"
                 sx={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '1.125rem',
+                  fontSize: 'var(--text-body-xl)',
                   lineHeight: 1.65,
                   color: 'var(--fg-muted)',
                   m: 0,
-                  maxWidth: 700,
                 }}
               >
                 How I rebuilt my personal site with Claude Code as a working teammate.
@@ -415,7 +415,7 @@ you are in the wrong layer.
                       aria-hidden
                       sx={{
                         fontFamily: 'var(--font-mono)',
-                        fontSize: 22,
+                        fontSize: 'var(--text-body-xl)',
                         color: 'var(--fg-dim)',
                         lineHeight: 1,
                       }}

@@ -29,7 +29,7 @@ describe('CodeBlock', () => {
 
   it('does not render a lang badge when lang is omitted', () => {
     renderBlock({ filename: 'example.ts', children: 'code here' });
-    expect(screen.queryByRole('generic', { name: /lang/i })).toBeNull();
+    expect(screen.queryByText('md')).toBeNull();
   });
 
   it('renders filename and body together', () => {
