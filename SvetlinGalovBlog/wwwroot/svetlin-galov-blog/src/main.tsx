@@ -7,7 +7,7 @@ import { CssBaseline } from '@mui/material';
 import { theme } from './theme/theme';
 import MainLayout from './layouts/MainLayout.tsx';
 import HomePage from './pages/home/HomePage';
-import Contact from './pages/contact/contact.jsx';
+import ContactPage from './pages/contact/ContactPage';
 import ProjectsPage from './pages/projects/ProjectsPage.tsx';
 import ProjectDetails from './pages/projects/details/ProjectDetails.tsx';
 import ProjectDetailsLayout from './layouts/projects/ProjectDetailsLayout.tsx';
@@ -26,7 +26,7 @@ const router = createBrowserRouter([
                 element: <MainLayout />,
                 children: [
                     { path: '/', element: <HomePage /> },
-                    { path: '/contact', element: <Contact /> },
+                    { path: '/contact', element: <ContactPage /> },
                     { path: '/projects', element: <ProjectsPage /> },
                     { path: '/projects/this-site-agent-augmented', element: <ProjectSlot4Page /> },
                 ],
