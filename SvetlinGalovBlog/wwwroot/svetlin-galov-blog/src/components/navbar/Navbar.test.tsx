@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material';
 import { theme } from '../../theme/theme';
@@ -61,5 +61,30 @@ describe('Navbar', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('applies navbar--scrolled class after scrolling past threshold', async () => {
+    const { container } = renderNavbar();
+    const nav = container.querySelector('.navbar');
+    expect(nav).not.toHaveClass('navbar--scrolled');
+
+    Object.defineProperty(window, 'scrollY', { value: 600, writable: true, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+
+    await waitFor(() => expect(nav).toHaveClass('navbar--scrolled'));
+  });
+
+  it('removes navbar--scrolled class when scrolled back above threshold', async () => {
+    Object.defineProperty(window, 'scrollY', { value: 600, writable: true, configurable: true });
+    const { container } = renderNavbar();
+    window.dispatchEvent(new Event('scroll'));
+
+    const nav = container.querySelector('.navbar');
+    await waitFor(() => expect(nav).toHaveClass('navbar--scrolled'));
+
+    Object.defineProperty(window, 'scrollY', { value: 0, writable: true, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+
+    await waitFor(() => expect(nav).not.toHaveClass('navbar--scrolled'));
   });
 });
