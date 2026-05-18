@@ -1,4 +1,3 @@
-import './ProjectInfo.css'
 import Tags from "../../../shared/components/tags/Tags.tsx";
 import ShortInfo from "../../../list/project/short-info/ShortInfo.tsx";
 

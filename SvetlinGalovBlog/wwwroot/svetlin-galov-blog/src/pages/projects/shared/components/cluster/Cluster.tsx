@@ -1,16 +1,23 @@
-﻿import './Cluster.css'
+import { Box } from '@mui/material';
 
 interface ClusterProps {
-    className?: string
+    className?: string;
     children: React.ReactNode;
 }
 
-const Cluster = ({className, children} : ClusterProps) => {
+const Cluster = ({ children }: ClusterProps) => {
     return (
-        <div className={`cluster ${className ? className : ''}`}>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                gap: 'var(--space-4)',
+                paddingTop: 'var(--space-4)',
+            }}
+        >
             {children}
-        </div>
-    )
+        </Box>
+    );
 }
 
 export default Cluster;

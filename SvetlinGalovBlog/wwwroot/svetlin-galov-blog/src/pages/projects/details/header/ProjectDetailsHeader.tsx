@@ -1,5 +1,4 @@
 import {useParams} from "react-router-dom";
-import './ProjectDetailsHeader.css'
 import ProjectInfo from "./project-info/ProjectInfo.tsx";
 import {useProjectBySlug, useProjects} from "../../shared/hooks/useProjects.ts";
 

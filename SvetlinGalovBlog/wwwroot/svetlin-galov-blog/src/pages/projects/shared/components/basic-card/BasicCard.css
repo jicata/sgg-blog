@@ -1,9 +1,9 @@
-﻿.basic-card{
-    background-color: var(--almost-black);
-    border-radius: 2rem;
-    border: 1px solid var(--more-black);
-    padding: 1.5rem;
+.basic-card {
+    background-color: var(--surface-1);
+    border-radius: var(--radius-3);
+    border: 1px solid var(--border);
+    padding: var(--space-5);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
