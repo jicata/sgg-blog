@@ -70,9 +70,10 @@ const NextProject = ({ projectName, projectSlug }: NextProjectProps) => {
                         borderColor: 'var(--border-strong)',
                         color: 'var(--fg)',
                     },
+                    '&:hover .arrow-span': { transform: 'translateX(3px)' },
                 }}
             >
-                View project <Box component="span" sx={{ display: 'inline-block', marginLeft: 'var(--space-1)', transition: 'transform var(--duration) var(--ease)', '.next-project:hover &': { transform: 'translateX(3px)' } }}>→</Box>
+                View project <Box component="span" className="arrow-span" sx={{ display: 'inline-block', marginLeft: 'var(--space-1)', transition: 'transform var(--duration) var(--ease)' }}>→</Box>
             </Box>
         </Box>
     );

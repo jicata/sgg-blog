@@ -13,7 +13,7 @@ const TextCard = ({ bulletNumber, heading, children = '' }: TextCardProps) => {
                 borderBottom: '1px solid var(--border)',
                 paddingTop: 'var(--space-4)',
                 paddingBottom: 'var(--space-4)',
-                display: { xs: 'flex', md: 'flex' },
+                display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
                 alignItems: { xs: 'flex-start', md: 'flex-start' },
                 gap: { xs: 'var(--space-2)', md: 'var(--space-6)' },
