@@ -20,7 +20,7 @@ Unlike `/ship-feature` (which lazy-creates one cleanup issue per PRD), `/ship-is
 ```markdown
 This issue tracks residual concerns from the /ship-issue autonomous orchestrator's run on Issue #<issue-number>.
 
-Each entry is a deferred fix. Resolve via /cleanup-ship-issues (when available) or by hand.
+Each entry is a deferred fix. Resolve via /drain-cleanup or by hand.
 
 ## Concessions
 
@@ -52,7 +52,7 @@ Each entry is a deferred fix. Resolve via /cleanup-ship-issues (when available) 
 |---|---|---|
 | `[concession-axis-b]` | Axis-B (standards) thread conceded after 3 rejects or round-7 cap | tech debt |
 | `[concession-axis-a]` 🚨 | Axis-A (requirements) thread conceded via forced-merge path | functional gap |
-| `[regression]` | Pre-existing failing test surfaced during the slice's test run | unrelated bug |
+| `[regression]` | Pre-existing failing test surfaced during the work item's test run | unrelated bug |
 | `[regression-from-fix]` | Fix applied during `/afk-address-pr` revealed a new unfixable failure | needs investigation |
 | `[contradictory-threads]` | Two reviewer threads demand mutually exclusive changes | review process issue |
 | `[ac-conflict]` | Reviewer thread contradicts an AC; AC was followed | spec/review mismatch |
@@ -76,7 +76,7 @@ These appear in `/ship-feature`'s cleanup template but cannot fire in `/ship-iss
 2. Lazy-created when the first residual concern arises (concession, regression, AC missing, infrastructure failure).
 3. Appended to throughout the rest of the run.
 4. End-of-run report links to it.
-5. `/cleanup-ship-issues` (when available) parses entries.
+5. `/drain-cleanup` parses entries.
 6. Closed when all checklist items are ticked.
 
 ## Relationship to /ship-feature's cleanup issue

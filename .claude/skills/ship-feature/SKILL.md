@@ -1,9 +1,11 @@
 ---
 name: ship-feature
-description: Top-level autonomous orchestrator that ships an entire PRD end-to-end. Loops through every child issue of the PRD, dispatches the afk-coder subagent to implement and address feedback, dispatches the afk-reviewer subagent for independent review, applies per-thread concession after 3 rejects (Axis-B only), forces merge after 7 rounds with all-blocker concession, then opens and merges a PRD→master PR. Never halts; logs every residual concern to a single per-PRD ship-cleanup GitHub issue. Opt-in `--parallel <N>` mode runs up to N children concurrently, gated on a `Blocked-by:` DAG parsed from PRD child issues, with one git worktree per slot and merges serialized through GitHub's merge queue on the PRD base branch. RUNS ON SONNET ONLY — both orchestrator and subagents. Use when the user runs /ship-feature <prd-number> to autonomously ship a feature.
+description: Top-level autonomous orchestrator that ships an entire PRD end-to-end. Loops through every child issue of the PRD, dispatches the afk-coder subagent to implement and address feedback, dispatches the afk-reviewer subagent for independent review, applies per-thread concession after 3 rejects (Axis-B only), forces merge after 7 rounds with all-blocker concession, then opens and merges a PRD→master PR. Never halts; logs every residual concern to a single per-PRD ship-cleanup GitHub issue. Opt-in `--parallel <N>` mode runs up to N children concurrently, gated on a `Blocked-by:` DAG parsed from PRD child issues, with one git worktree per slot and merges serialized through GitHub's merge queue on the PRD base branch. Runs each role on the profile's configured per-role model (models.orchestrator / models.coder / models.reviewer). Use when the user runs /ship-feature <prd-number> to autonomously ship a feature.
 ---
 
 # Ship Feature
+
+(Extracted 2026-07 from the donor stack. Pipeline-generic; repo facts — check commands, per-role models, wire-contract tooling — live in the repo's `.claude/doctrine/project-profile.md` overlay. `master` throughout denotes the repo's **default branch** — substitute `main` etc. per `gh repo view --json defaultBranchRef`.)
 
 Autonomous orchestrator for shipping an entire PRD end-to-end. Replaces the manual sequence `/execute-issue → /review-pr → /address-pr → /review-pr → … → /merge-pr` with a self-driving loop that ships every child of a PRD and finalizes the PRD branch into master.
 
@@ -23,24 +25,25 @@ If no PRD number, ask. Do not guess.
 2. **Never halt for human input.** Every unresolvable condition becomes a cleanup-issue entry; the loop continues.
 3. **Independent review is load-bearing.** The Coder and Reviewer subagents are different agents. Do not collapse them.
 4. **GitHub is the durable state.** No local state file. Resumability via reconciliation from GitHub on re-invocation.
-5. **Sonnet end-to-end.** Both the orchestrator and the Coder/Reviewer subagents run on Sonnet. Opus is forbidden from this flow — it's overkill for orchestration routing and prohibitive for multi-round subagent loops.
+5. **Per-role models, resolved from the profile.** Each role runs on the model the profile's `models` map assigns it — `orchestrator`, `coder`, `reviewer` — falling back to `workhorse_model` for any role the map omits. The **reviewer must never be weaker than the coder**: a reviewer that cannot see what the coder could not see rubber-stamps, which defeats the independent-review dispatch entirely. Spending up on the reviewer is the highest-value tier choice in this flow.
 6. **The user's main repo checkout is never touched.** All implementation, branching, pushing, reviewing, and final master-merge prep happens inside dedicated sibling worktrees at `../<repo>-ship-prd-<prd-number>` (sequential mode) or `../<repo>-ship-prd-<prd-number>-slot<k>` for `k in 1..N` (parallel mode). The worktrees own the PRD base branch and child branches for their lifetime; the user can keep working on `master` (or any other branch) in their main checkout for the duration of the run.
 7. **Parallelism is opt-in via `--parallel <N>` and DAG-gated.** Without the flag, the run is fully sequential and identical to prior behavior. With the flag, child issues are dispatched concurrently only when their `Blocked-by:` predecessors have merged; merges are always serialized — either via GitHub's merge queue on the PRD base branch (preferred, auto-detected at Step 0c) or via an orchestrator-side working-memory mutex (fallback, when merge queue isn't available — e.g., private repos on free GitHub plans). The scheduler is best-effort: any slot failure logs to cleanup and other slots keep flowing.
 
 ## Step 0a — Model preflight (fail-fast)
 
-The orchestrator must run on Sonnet, not Opus. Before any other step:
+The orchestrator must run on the model the profile assigns to the **orchestrator role**. Before any other step:
 
-1. Inspect the active model. The harness exposes the current model in the session header (e.g., "claude-sonnet-4-6", "claude-opus-4-7").
-2. If the model is **anything other than Sonnet** (any `claude-sonnet-*` model is acceptable; `claude-opus-*` and `claude-haiku-*` are not), stop immediately and tell the user:
+1. Read `models.orchestrator` from the project profile (`.claude/doctrine/project-profile.md`), falling back to `workhorse_model` if the `models` map is absent or omits the role.
+2. Inspect the active model. The harness exposes the current model in the session header.
+3. If the active model is **anything other than that** (any variant of the same model family is acceptable), stop immediately and tell the user:
 
-   > /ship-feature must run on Sonnet (cost + architecture decision). Active model is `<X>`. Run `/model sonnet` (or whichever Sonnet variant your harness exposes), then re-invoke `/ship-feature <prd-number>`.
+   > /ship-feature must run on the profile's orchestrator model. Active model is `<X>`, profile says `<models.orchestrator>`. Run `/model <models.orchestrator>`, then re-invoke `/ship-feature <prd-number>`.
 
-3. Do NOT attempt to switch models silently or proceed on a non-Sonnet model.
+4. Do NOT attempt to switch models silently. **Subagent tiers are not constrained by the session model** — the orchestrator passes `model` explicitly on every dispatch, so the coder and reviewer run on their own assigned tiers regardless of what this session is set to.
 
 This guard exists for two reasons:
-- **Cost** — multi-round Coder↔Reviewer loops on Opus burn an order of magnitude more than the orchestration value justifies
-- **Architecture** — the orchestrator's job is routing on `result` / `verdict` JSON keys, not deep reasoning. Sonnet handles routing and tool sequencing correctly; the heavy lifting was already deliberately split out into Sonnet subagents
+- **Cost** — multi-round Coder↔Reviewer loops on a premium model burn an order of magnitude more than the orchestration value justifies
+- **Architecture** — the orchestrator's job is routing on `result` / `verdict` JSON keys, not deep reasoning. The workhorse model handles routing and tool sequencing correctly; the heavy lifting was already deliberately split out into workhorse-model subagents
 
 ## Step 0b — Permission preflight (fail-fast)
 
@@ -48,7 +51,7 @@ Read `.claude/settings.local.json`. The orchestrator requires the following perm
 
 - `Bash(gh:*)`
 - `Bash(git status:*)`, `Bash(git checkout:*)`, `Bash(git fetch:*)`, `Bash(git pull:*)`, `Bash(git push:*)`, `Bash(git merge:*)`, `Bash(git rebase:*)`, `Bash(git worktree:*)`, `Bash(git rev-parse:*)`, `Bash(git branch:*)`, `Bash(git ls-remote:*)`, `Bash(git show-ref:*)`
-- `Bash(dotnet test:*)`, `Bash(npm test:*)`
+- One `Bash(...)` entry per command in the profile's `check_commands` (donor: `Bash(dotnet test:*)`)
 - `Read(./**)`, `Write(./**)`, `Edit(./**)`
 
 If any required permission is missing, **stop immediately** and tell the user:
@@ -57,6 +60,21 @@ If any required permission is missing, **stop immediately** and tell the user:
 > <list of missing entries>
 
 Do not attempt to add permissions silently.
+
+### Review-identity preflight (warn, never fail-fast)
+
+If the profile sets `review_identity: app`, run its `review_app_token_cmd` **once, now**, and discard the token. This is a reachability probe, not a review.
+
+- **Succeeds** → record `review_identity_effective = "app"` and continue silently.
+- **Fails** → classify per `.claude/skills/_shared/review-protocol.md` §7.1, record `review_identity_effective = "self"` plus the reason and remedy, and **tell the operator in the opening run message** — not at the end. Then continue.
+
+**Never fail-fast on this.** A credential problem must not cost a run, and the verdict travels in the review-body marker regardless, so the merge gate is unaffected. What it must not do is pass unnoticed — carry the result into the **Execution conformance** block of the final report, which states configured vs executed mode explicitly.
+
+Do **not** file this as a cleanup-issue entry. The cleanup issue tracks code debt to fix before release; a missing credential on one machine is neither, and filing it there buries real findings behind an operational notice.
+
+Probing here rather than at first review means a fresh machine missing the key or the token helper is reported before any work is done, instead of surfacing several rounds in.
+
+**Resilience preflight (mandatory, before first Agent dispatch):** Read `.claude/skills/_afk-shared/resilience.md` immediately after the permission check. It governs §1 — the non-interactive, time-boxed shell that prevents `gh` / remote-`git` / provisioning calls from hanging. There is no watchdog to arm and no `ScheduleWakeup` to load: every long-running step runs as a **visible** background `Agent` the operator can watch in the live agent display, and the harness's completion notification advances the state machine.
 
 ## Step 0c — Merge-strategy detection (parallel mode only)
 
@@ -158,6 +176,7 @@ Single worktree, identical to prior behavior.
      git worktree add "$WORKTREE_PATH" -b <base-branch> origin/master
      ( cd "$WORKTREE_PATH" && git push -u origin <base-branch> )
      ```
+4b. **Sync the base branch forward from master** (see "Base-branch master sync" below) — run it here, in the base worktree, before any child branch is cut from `<base-branch>`. Skip only when the base branch was just created off `origin/master` in 4 (it is already current).
 5. **All subsequent Agent dispatches and any local git/gh operations the orchestrator runs must use `$WORKTREE_PATH` as their working directory.** The orchestrator passes the path into each Agent prompt; agents `cd` into it before any tool use. The orchestrator itself uses `( cd "$WORKTREE_PATH" && <cmd> )` for every git op.
 
 #### Parallel mode (`--parallel <N>`)
@@ -174,7 +193,7 @@ N+1 worktrees total: one "base" worktree owning `<base-branch>` for orchestrator
    done
    ```
 2. `git fetch origin && git worktree prune`.
-3. Create or reuse `$BASE_WT` exactly as in sequential mode steps 3–4 above. **Important:** `$BASE_WT` owns `<base-branch>` exclusively. Slot worktrees must never check out `<base-branch>` directly (git refuses anyway — a branch can only be in one worktree at a time).
+3. Create or reuse `$BASE_WT` exactly as in sequential mode steps 3–4b above — **including the master sync (4b), which must complete and push before any slot worktree is created**, since slots detach at `origin/<base-branch>` and would otherwise pin the pre-sync tip. **Important:** `$BASE_WT` owns `<base-branch>` exclusively. Slot worktrees must never check out `<base-branch>` directly (git refuses anyway — a branch can only be in one worktree at a time).
 4. For each slot `k`, create or reuse `$SLOT_WT_k`. A slot worktree's *initial* state is a detached HEAD at `origin/<base-branch>` (so `<base-branch>` itself stays exclusively in `$BASE_WT`):
    ```bash
    if ! git worktree list --porcelain | grep -q "$SLOT_WT_k"; then
@@ -197,6 +216,27 @@ N+1 worktrees total: one "base" worktree owning `<base-branch>` for orchestrator
 
 The afk-* subskills retain their own `dirty_tree_foreign` guard which will fire on whichever worktree they run in if it is unexpectedly dirty.
 
+#### Base-branch master sync (both modes)
+
+A PRD base branch is cut from `origin/master` **once**, at creation. Without this step it never resyncs, so every child is implemented, reviewed and merged against a master that has moved on, and the entire divergence is paid off in one big-bang merge at FINALIZE_PRD. (Donor scar that prompted this: a PRD base branch sat 7 commits behind master — three merged code PRs missing — one day after it was cut.) Run this in the base worktree at Step 1's 4b, before any child branch or slot worktree derives from `<base-branch>`:
+
+```bash
+( cd "$BASE_WT" && git fetch origin && git pull --ff-only origin <base-branch> )
+BEHIND=$(cd "$BASE_WT" && git rev-list --count origin/<base-branch>..origin/master)
+if [ "$BEHIND" -gt 0 ]; then
+  ( cd "$BASE_WT" && git merge --no-edit origin/master ) && \
+  ( cd "$BASE_WT" && git push origin <base-branch> )
+fi
+```
+
+**Merge, never rebase.** The base branch is published and every child is cut from it — rebasing it would orphan them all. This is the same direction FINALIZE_PRD already merges (`origin/master` **into** `<base-branch>`), just paid incrementally.
+
+**On conflict** (`git merge` exits non-zero): resolve hunk-by-hunk preferring both sides where orthogonal; for irreducible conflicts `git checkout --ours <file> && git add <file>` (`--ours` = the PRD side, since HEAD is `<base-branch>`), commit, push. Log a `[base-master-sync-conflict]` entry to the ship-cleanup issue naming each file resolved `--ours`, because that silently discards a master-side change from the PRD branch. **Never halt** — the orchestrator's contract holds.
+
+**In-flight children are deliberately left alone.** A child branched off the pre-sync base still merges cleanly into the freshened base (git resolves against the merge-base) and its PR diff stays scoped to its own changes. Do **not** mass-rebase open child branches here — `needs_rebase` exists for merge-queue serialization, not for this. A stale child's only cost is that a semantic conflict with master surfaces at its own MERGE_CHILD instead of now, which the existing `merge_conflict` / `rebase_conflict` routing already handles.
+
+**Once per run, at setup.** Do not re-sync on every SCHEDULER_TICK — mid-run base movement invalidates slot worktrees that are detached at `origin/<base-branch>`. FINALIZE_PRD's existing pre-flight merge catches anything that landed on master during the run.
+
 ## Step 1.5 — Build dependency DAG (parallel mode only)
 
 **Skip this step entirely in sequential mode.**
@@ -208,7 +248,7 @@ The parallel scheduler needs to know which child issues are unblocked. Build the
    gh issue list --search "is:issue is:open <linkage-to-prd-<prd-number>>" \
      --json number,title,body,labels --limit 200
    ```
-   (Use whatever sub-issue linkage convention the PRD uses — `Parent: #<prd>` line in body, `prd-<n>` label, or GitHub sub-issue API. Adopt the same enumeration `/afk-execute-issue` uses; do not invent a new one.)
+   (Use whatever sub-issue linkage convention the PRD uses — `## Parent PRD` line in body, `prd-<n>` label, or GitHub sub-issue API. Adopt the same enumeration `/afk-execute-issue` uses; do not invent a new one.)
 
 2. For each child, parse `Blocked-by:` directives from the issue body. Accepted forms:
    - `Blocked-by: #123`
@@ -262,7 +302,7 @@ Track in working memory (no state file):
 
 The state-machine *transitions* below (NEXT_CHILD / REVIEW / ADDRESS / MERGE_CHILD / FINALIZE_PRD / DONE) are identical in both modes — what changes is the *driver*:
 
-- **Sequential mode (no `--parallel`):** one PR in flight at a time. The driver is a single tail-recursive loop: NEXT_CHILD → REVIEW → ADDRESS → ... → MERGE_CHILD → back to NEXT_CHILD. This is the prior behavior and remains the default.
+- **Sequential mode (no `--parallel`):** one PR in flight at a time. The transition order is a single loop: NEXT_CHILD → REVIEW → ADDRESS → ... → MERGE_CHILD → back to NEXT_CHILD. The Coder/Reviewer dispatches inside it run **in the background as visible `Agent`s** (`run_in_background: true`) — driven by harness completion notifications, not a synchronous blocking `Agent` call — so the operator can watch each in the live agent display. Merge/concede still run inline in the orchestrator's own loop (protected by resilience.md §1). The transition order is unchanged from prior behavior.
 - **Parallel mode (`--parallel <N>`):** up to N PRs in flight at once. The driver is a scheduler tick (described below) that dispatches Agent calls **in background** (`run_in_background: true`) and re-evaluates the state machine for each completing slot independently. Merges remain serialized via GitHub's merge queue (Step 0c), not via orchestrator-side mutex.
 
 State machine:
@@ -322,11 +362,20 @@ If a child is genuinely unworkable (e.g., Coder returns repeated `git_failure` o
 
 ### REVIEW
 
-Dispatch `afk-reviewer` agent to run `/afk-review-pr <pr_number>`. Persist this Reviewer subagent across rounds on the same PR.
+Dispatch `afk-reviewer` agent to run `/afk-review-pr <pr_number>` (Axis A + B) as a visible background `Agent` (`run_in_background: true`; see Background dispatch). Persist this Reviewer subagent across rounds on the same PR via `SendMessage`.
 
-Parse the structured return:
-- `verdict: approve` AND `axis_a_blockers == 0` AND `axis_b_blockers == 0` AND no unresolved threads → GO TO MERGE_CHILD
+Parse the structured return — keep findings as `reviewer_verdict` for this PR.
+
+#### Decision
+
+- `verdict: approve` AND `axis_a_blockers == 0` AND `axis_b_blockers == 0` AND (`axis_c_mode != "enforcing"` OR `axis_c == "pass"`) AND no unresolved threads → GO TO MERGE_CHILD
+
+**The Axis-C clause only binds under `axis_c_mode: "enforcing"`.** Under `advisory` a red CI is reported but never blocks the transition; under `off` there is nothing to read. The whole `axis_c == "fail"` routing below is likewise enforcing-only — see `.claude/skills/_shared/axis-c.md`.
+- `axis_c: "superseded"` (Coder pushed mid-review; findings describe a stale diff) → re-dispatch Reviewer on the new head **without** incrementing `round_count` — a superseded review was never a real round
+- `axis_c: "unknown"` (CI still pending at the reviewer's 15m cap, or cancelled) → re-dispatch Reviewer once to re-read CI without incrementing `round_count`. On a second `unknown`, log a `[ci-unknown]` cleanup entry and treat as `fail` — **never** as pass
 - Otherwise → GO TO ADDRESS
+
+**Axis C never enters the concession path.** The per-thread reject counter and the 3-reject Axis-B concession in ADDRESS apply to review *threads*; `axis_c` is a check-run fact carried on the verdict, not a thread. It is never conceded and never force-merged past — see the forced-merge exception below.
 
 For each thread in `thread_outcomes` with `state in {still_open, pushback_rejected}`, increment that thread's `reject_count` in working memory.
 
@@ -343,9 +392,15 @@ Before dispatching Coder:
    - Force concede every remaining unresolved thread:
      - Axis-B: `/afk-concede-thread <pr> <id> "round limit reached"`
      - Axis-A: `/afk-concede-thread <pr> <id> "round limit reached" --force-axis-a`
-   - GO TO MERGE_CHILD with `--force <cleanup-issue-number>`
+   - **Axis-C gate on the forced merge.** Threads are opinions and can be conceded; a red CI lane is a fact and cannot. Before forcing:
+     - `axis_c == "pass"` → GO TO MERGE_CHILD with `--force <cleanup-issue-number>`
+     - `axis_c == "fail"` with **every** failing check marked `pre_existing_on_base: true` → the breakage is not this child's. Log a `[ci-pre-existing]` cleanup entry naming the checks, then GO TO MERGE_CHILD with `--force`. (Merging is correct here: blocking would stall the whole PRD on breakage the child cannot fix — the failure belongs to the base branch and is tracked separately.)
+     - `axis_c == "fail"` with **any** failing check attributable to this PR → **do not force-merge.** Log a `[ci-fail-blocking]` cleanup entry with the check names and extracted assertions, mark the child `unmergeable`, and continue NEXT_CHILD.
+     - `axis_c == "unknown"` → treat as attributable (same as the previous bullet). Never force-merge on an unobserved suite.
 
-3. Otherwise dispatch `afk-coder` to run `/afk-address-pr <pr_number>`. Persist this Coder subagent across rounds on the same PR.
+   This is the one deliberate exception to critical principle #1 ("a child is never skipped"). Force-merging a PR whose own changes break CI pushes known-broken code onto the PRD base branch, where it fails *every subsequent child's* CI — converting one stuck child into a stalled PRD. Stopping at one unmergeable child is strictly cheaper. The child is recorded, not silently dropped, and the final report surfaces it.
+
+3. Otherwise dispatch `afk-coder` to run `/afk-address-pr <pr_number>` as a visible background `Agent` (`run_in_background: true`; see Background dispatch). Persist this Coder subagent across rounds on the same PR via `SendMessage`.
 
 Parse the structured return:
 - `result: pushed` → increment `round_count`, GO TO REVIEW
@@ -373,11 +428,19 @@ Otherwise:
 - **`merge_strategy == "mutex"`:** `afk-merge-pr` is invoked **without** `--auto` (synchronous merge). The orchestrator acquires the working-memory mutex first; only the mutex-holder calls the skill. Return is `result: merged` (synchronous), at which point the orchestrator: (1) bumps `base_branch_tip`, (2) marks every other in-flight slot `needs_rebase = true`, (3) releases the mutex, (4) releases the slot.
 
 Parse the structured return:
-- `result: merged` (sequential, or parallel mutex-mode, or parallel queue-mode after queue-confirmed merge) → record in `shipped_clean` (if no residue) or `shipped_with_residue` (split by axis), GO TO NEXT_CHILD (sequential) or release slot + (mutex mode only) release mutex + bump base tip + flag siblings + re-enter SCHEDULER_TICK (parallel)
+- `result: merged` (sequential, or parallel mutex-mode, or parallel queue-mode after queue-confirmed merge) → **close the child issue explicitly** (do not rely on keyword propagation — see note below), record in `shipped_clean` (if no residue) or `shipped_with_residue` (split by axis), GO TO NEXT_CHILD (sequential) or release slot + (mutex mode only) release mutex + bump base tip + flag siblings + re-enter SCHEDULER_TICK (parallel)
+
+  **Close the child issue after merge.** After a `result: merged` is confirmed, explicitly close the child issue:
+  ```bash
+  gh issue close <child-issue-number> --reason completed \
+    --comment "Shipped via PR #<pr_number>, /ship-feature autonomous run for PRD #<prd_number>."
+  ```
+  This is necessary because keyword-based auto-close (`Fixes #N`, `Closes #N`) only fires when a PR merges directly into the default branch. Child PRs merge into the PRD base branch, not master, so keyword evaluation is silently skipped regardless of whether the keyword appears in the PR body or commit message. Even keywords in commit messages that later reach master via the FINALIZE_PRD merge are unreliable — squash commits may or may not carry them forward depending on where the coder placed the keyword. Explicit close is the only deterministic path. If `gh issue close` fails (e.g. already closed, missing permissions), log a `[issue-close-failed pr=#NN child=#CC]` entry to the cleanup issue and continue — a missed close is cosmetic, not a blocker.
 - `result: merge_queued` (parallel queue-mode only) → slot remains occupied; SCHEDULER_TICK polls `gh pr view <pr> --json mergedAt,state` on subsequent ticks. On observed merge, transition to `merged`. If the PR transitions to `closed` without `mergedAt` (queue rejected it — required check failure on rebased base), GO TO ADDRESS.
 - `result: merge_conflict` → re-dispatch `afk-coder` for `/afk-address-pr` to attempt rebase; if Coder returns `rebase_conflict` again, force-concede + retry merge; if still failing, mark `unmergeable`
 - `result: branch_protection` → cleanup entry, mark `unmergeable`, NEXT_CHILD
-- `result: changes_requested` / `unresolved_threads` → orchestrator bug (shouldn't reach here without forcing); halt with diagnostic
+- `result: review_stale` → a commit landed after the approving review, so the head is ungraded. GO TO REVIEW to re-grade at the current head. **Guard:** on a second consecutive `review_stale` for the same PR, log a `[stale-review-loop]` cleanup entry and GO TO MERGE_CHILD with `--force <cleanup-issue-number>` (which records `stale_review_forced`) rather than looping. In mutex mode this is expected occasionally — a `needs_rebase` slot pushes a rebase after its review pass
+- `result: changes_requested` / `unresolved_threads` / `not_approved` / `not_reviewed` → orchestrator bug (shouldn't reach here without forcing); halt with diagnostic
 - `result: structural_bug_master_target` → halt; this is a PRD-config error
 
 ### FINALIZE_PRD
@@ -436,15 +499,26 @@ When `NEXT_CHILD` reports `no_children` and there are no open child PRs left:
    gh issue close <prd-number> --reason completed --comment "Completed via PR #<prd-pr-num>, autonomous /ship-feature run."
    ```
 
+3b. **Delete the parent-PRD scaffolding label.** The `prd-<prd-number>` label `/prd-to-issues` put on every child is temporary — its job ends when the PRD lands on master. **Only on a successful master merge** (skip on the `[finalize-blocked]` path, which leaves the PRD→master PR open and GOES TO DONE without a merge — the label must survive so the still-open children stay grouped):
+   ```bash
+   gh label delete "prd-<prd-number>" --yes 2>/dev/null || true   # no-op if the PRD wasn't labelled
+   ```
+   Deleting the label removes it from the (now-closed) children and keeps the repo's label list from accreting one dead `prd-*` label per shipped PRD.
+
+3c. **Publish the wire-contract collection to its canonical store — autonomously, no HITL — only if the profile's External contracts section declares wire-contract publish tooling, only on a successful master merge, and only if this PRD touched the collection.** The collection advances per-child during the run; the canonical store (what the team demos from) is written **only from master, only here**. Detect touch via `gh pr diff <prd-pr-num> --name-only` against the profile-declared collection path; then run the profile-declared canonical-publish command inside the worktree. (Donor: a Postman sync tool whose publish command guards `HEAD == origin/master`, structurally diffs the cloud, reports any cloud-only requests the push would overwrite, pushes, and re-verifies. Mirrors `afk-merge-pr`'s per-child publish step.)
+   - **Success** → report `Wire-contract publish: pushed` (or `already in sync`). If the tool reported overwritten cloud-only content, copy that under a `## Wire-contract publish — overwrote cloud-only requests` note on the cleanup issue — an audit trail, **not** a gate.
+   - **Failure** (missing credentials, `HEAD` ≠ master, API error, verify failed) → append **one** `[pending-push]` entry to the cleanup issue and report `Wire-contract publish: failed — residue logged`. The only path that defers to a human; `/drain-cleanup` re-verifies it.
+   - **Profile declares no wire-contract tooling** → skip this step entirely; report `Wire-contract publish: n/a`.
+
 ### DONE
 
 1. Worktree cleanup:
-   - **Sequential mode:** if the PRD→master PR merged cleanly (or with logged conflicts), AND there are no `unmergeable` children left in flight → remove the worktree:
+   - **Sequential mode:** if the PRD→master PR merged cleanly (or with logged conflicts), AND there are no `unmergeable` children left in flight, remove the worktree now:
      ```bash
      git worktree remove --force "$WORKTREE_PATH"
      git worktree prune
      ```
-   - **Parallel mode:** under the same clean conditions, remove the base worktree AND every slot worktree:
+   - **Parallel mode:** under the same clean conditions, remove every slot worktree and the base worktree now:
      ```bash
      for k in $(seq 1 <N>); do
        git worktree remove --force "$SLOT_WT_k" 2>/dev/null || true
@@ -470,15 +544,27 @@ gh issue comment <prd-number> --body "$(cat <<EOF
 - Children shipped with Axis-A residue 🚨: <count>
 - Children unmergeable (push/branch-protection failures): <count>
 - PRD finalization: <merged-into-master | conflicts logged | blocked>
+- Wire-contract publish: <n/a | untouched | pushed | already in sync | failed — residue logged>
 
 ## Cleanup issue
 <link, or "none">
+
+## Execution conformance
+<Either "✅ Ran as configured." or, for each mismatch, one line:
+ "⚠️ <what> — configured: <x>, executed: <y>. Cause: <reason>. Fix: run `<repair skill>`."
+ Name a skill the operator can invoke, never a sequence of manual steps — for review identity that is
+ `/fix-review-identity`.
+ Rows to check: review identity (profile `review_identity` vs `review_identity_effective`);
+ CI authority (profile `axis_c`) — under `advisory`, report any red or unknown check here even though it did
+ not block, so a permanently-red suite cannot become invisible;
+ merge strategy (Step 0c preferred `queue` vs executed `mutex`); anything else where the run
+ silently took a fallback path.>
 
 ## Children
 <table: pr_number | title | merged_at | residue_tags>
 
 ## Worktree(s)
-<"removed" if cleanly finalized, or the absolute path(s) if any child is unmergeable / finalize blocked / PRD PR still open. In parallel mode, list base + every slot worktree retained.>
+<"removed", or the absolute path(s) if any child is unmergeable / finalize blocked / PRD PR still open. In parallel mode, list base + every slot worktree retained.>
 
 ## Parallelism (parallel runs only)
 - Concurrency: <N> slots
@@ -499,18 +585,18 @@ To dispatch `afk-coder` and `afk-reviewer`, use the `Agent` tool. Each dispatch 
 
 ### Model enforcement — MANDATORY
 
-**Every Agent dispatch from /ship-feature MUST pass `model: "sonnet"` explicitly.** Non-negotiable:
+**Every Agent dispatch from /ship-feature MUST pass `model:` explicitly, resolved from the profile's `models` map by role** — `models.coder` for coder dispatches, `models.reviewer` for reviewer dispatches, falling back to `workhorse_model` for any role the map omits. Non-negotiable:
 
-- The orchestrator itself already runs on Sonnet (enforced by Step 0a model preflight)
-- The `afk-coder.md` and `afk-reviewer.md` agent definitions declare `model: sonnet` in frontmatter, but the harness can let the parent's model leak through to subagents in some configurations
-- Passing `model: "sonnet"` at dispatch time overrides any inheritance and guarantees Sonnet runs the work
-- Sonnet end-to-end: orchestrator AND subagents. No Opus in the loop. This is a cost discipline — multi-round Coder↔Reviewer loops on Opus are prohibitive
+- The orchestrator itself already runs on `models.orchestrator` (enforced by Step 0a model preflight)
+- The `afk-coder.md` and `afk-reviewer.md` agent definitions may pin the model in frontmatter, but the harness can let the parent's model leak through to subagents in some configurations
+- Passing the model at dispatch time overrides any inheritance and guarantees the role's assigned tier runs the work — this is also what makes subagent tiers independent of the session model
+- Workhorse end-to-end: orchestrator AND subagents. No premium model in the loop. This is a cost discipline — multi-round Coder↔Reviewer loops on a premium model are prohibitive
 
-If the harness rejects the `model` parameter on a particular `subagent_type`, fall back to `general-purpose` with explicit `model: "sonnet"`.
+If the harness rejects the `model` parameter on a particular `subagent_type`, fall back to `general-purpose` with the explicit `model` parameter.
 
 ### Subagent type — handle harness fallback
 
-Prefer `subagent_type: "afk-coder"` / `"afk-reviewer"` if the harness has registered the agent definitions as named subagent types. If those types are not available, fall back to `subagent_type: "general-purpose"` and prepend the prompt with `"Read .claude/agents/afk-coder.md (or afk-reviewer.md) first — that file governs your behavior."` Either way, **always pass `model: "sonnet"`**.
+Prefer `subagent_type: "afk-coder"` / `"afk-reviewer"` if the harness has registered the agent definitions as named subagent types. If those types are not available, fall back to `subagent_type: "general-purpose"` and prepend the prompt with `"Read .claude/agents/afk-coder.md (or afk-reviewer.md) first — that file governs your behavior."` Either way, **always pass the role's model explicitly** — `models.coder` for a coder dispatch, `models.reviewer` for a reviewer dispatch.
 
 **Every Agent prompt must begin with the worktree-CWD preamble** so the subagent operates inside the dedicated worktree, not the user's main checkout.
 
@@ -520,16 +606,17 @@ Prefer `subagent_type: "afk-coder"` / `"afk-reviewer"` if the harness has regist
 **Parallel mode preamble** (slot-specific path baked in; one of `$BASE_WT` or `$SLOT_WT_k`):
 > "Your working directory is `<SLOT_WT_k>` — slot `<k>` of `<N>` in a parallel /ship-feature run. This worktree currently holds child branch `<child-branch>` (detached `origin/<base-branch>` when idle). It is NOT the user's main repo checkout and NOT the base worktree (which lives at `<BASE_WT>` and exclusively owns `<base-branch>`). Before any tool use, `cd <SLOT_WT_k>`. Do not check out `<base-branch>` here — it is claimed by the base worktree."
 
-### Background dispatch (parallel mode only)
+### Background dispatch (both modes)
 
-Every Coder/Reviewer Agent dispatch in parallel mode MUST pass `run_in_background: true`. The orchestrator does not block on individual slot work; it relies on harness completion notifications to drive SCHEDULER_TICK. Sequential mode keeps `run_in_background: false` (the default) so the orchestrator's tail-recursive driver works as before.
+**Every Coder/Reviewer Agent dispatch — sequential or parallel, initial or `SendMessage` continuation — MUST pass `run_in_background: true`** so it appears in the live agent display and the operator can watch it. The orchestrator never blocks inside an `Agent` call: it drives on harness completion notifications. It does **not** poll, sleep-wait, or arm any `ScheduleWakeup` watchdog. If a child appears wedged, the operator sees it frozen in the display (no forward tool activity) and intervenes; a slow-but-working child shows ongoing activity and is left alone. Persisted Coder/Reviewer context (rounds via `SendMessage`) is preserved across rounds.
 
 ### Coder dispatch (initial child) — sequential
 
 ```
 Agent(
   subagent_type: "afk-coder",      // or "general-purpose" with prompt prefix
-  model: "sonnet",                  // MANDATORY
+  model: "<models.coder>",          // MANDATORY — profile models.coder (fallback workhorse_model)
+  run_in_background: true,          // MANDATORY (both modes) — runs in background, visible in the agent display
   description: "Implement next child of PRD #<n>",
   prompt: "<sequential worktree-CWD preamble>. Then run /afk-execute-issue <prd-number>. Pick the next eligible child, implement it via TDD, branch off <base-branch>, open a PR targeting <base-branch>. Emit your structured JSON return at the end of your turn."
 )
@@ -540,7 +627,7 @@ Agent(
 ```
 Agent(
   subagent_type: "afk-coder",
-  model: "sonnet",                   // MANDATORY
+  model: "<models.coder>",           // MANDATORY — profile models.coder (fallback workhorse_model)
   run_in_background: true,           // MANDATORY in parallel mode
   description: "Implement child #<c> of PRD #<n> in slot <k>",
   prompt: "<parallel worktree-CWD preamble for slot <k>>. Then run /afk-execute-issue <prd-number> --child <c>. The orchestrator has already claimed child #<c> for this slot — do not re-pick. Branch off <base-branch> (use `git checkout -B <child-branch> origin/<base-branch>` inside this worktree), implement via TDD, open a PR targeting <base-branch>. Emit your structured JSON return."
@@ -554,8 +641,8 @@ Re-use the same Coder subagent across rounds via `SendMessage` if the harness su
 ```
 Agent(
   subagent_type: "afk-coder",
-  model: "sonnet",                  // MANDATORY
-  run_in_background: <true if parallel else false>,
+  model: "<models.coder>",          // MANDATORY — profile models.coder (fallback workhorse_model)
+  run_in_background: true,          // MANDATORY (both modes) — runs in background, visible in the agent display
   description: "Address review feedback on PR #<n>",
   prompt: "<worktree-CWD preamble for this PR's worktree (sequential: $WORKTREE_PATH; parallel: $SLOT_WT_<k>)>. Then run /afk-address-pr <pr-number>. This is round <r> on this PR. Address every unresolved thread; push back via reply on out-of-scope concerns. Emit your structured JSON return."
 )
@@ -568,8 +655,8 @@ Spin up a fresh Reviewer per new PR; persist within the PR via `SendMessage` or 
 ```
 Agent(
   subagent_type: "afk-reviewer",
-  model: "sonnet",                  // MANDATORY
-  run_in_background: <true if parallel else false>,
+  model: "<models.reviewer>",       // MANDATORY — profile models.reviewer (fallback workhorse_model)
+  run_in_background: true,          // MANDATORY (both modes) — runs in background, visible in the agent display
   description: "Review PR #<n> round <r>",
   prompt: "<worktree-CWD preamble for this PR's worktree>. Then run /afk-review-pr <pr-number>. <If follow-up: This is round <r>; you have prior threads on this PR — arbitrate any Coder pushback replies.> Emit your structured JSON return."
 )
@@ -583,15 +670,15 @@ Agent(
 4. **Always lazy-create the cleanup issue** on first concern, never up-front.
 5. **Always emit final report to chat AND PRD issue comment.**
 6. **Never bypass branch protection.**
-7. **Always run permission preflight (Step 0) before anything else.** Fail fast if permissions missing.
+7. **Always run preflight Steps 0a/0b (and 0c in parallel mode) before anything else.** Step 0b's review-identity probe warns and continues rather than failing fast — but any gap between configured and executed mode must be stated up front **and** repeated in the final report's Execution conformance block, never left silent. Step 0b includes the resilience preflight: read `resilience.md` (it governs the §1 time-boxed shell that prevents `gh` / `git` / provisioning hangs) before first dispatch.
 8. **Always reconcile from GitHub on re-invocation.** Open PRs targeting the PRD base branch are picked up and resumed.
 9. **Never create more than one ship-cleanup issue per PRD.** Helper deduplicates by title search.
 10. **Coder and Reviewer must be separate agent dispatches.** Independence is the design.
-11. **Sonnet end-to-end.** The orchestrator MUST run on Sonnet (Step 0a model preflight). Every Agent dispatch MUST pass `model: "sonnet"` explicitly (frontmatter alone is insufficient — the dispatch parameter is the load-bearing override). No Opus anywhere in this flow.
+11. **Per-role models.** The orchestrator MUST run on `models.orchestrator` (Step 0a preflight). Every Agent dispatch MUST pass the role's model explicitly — `models.coder` or `models.reviewer` — because frontmatter alone is insufficient: the dispatch parameter is the load-bearing override. **The reviewer must never be weaker than the coder**, or independent review degrades to rubber-stamping.
 12. **Never touch the user's main checkout.** All implementation, branching, pushing, reviewing, and master-merge prep happens inside the dedicated worktree(s). `master` is never checked out — it stays as `origin/master` and the master-merge is staged by merging `origin/master` into `<base-branch>` inside `$BASE_WT` (or `$WORKTREE_PATH` in sequential mode).
 13. **Parallel mode: merges are always serialized.** Step 0c picks the strategy: `queue` (preferred, GH merge queue, no orchestrator-side lock) or `mutex` (fallback, working-memory single-holder lock with synchronous `gh pr merge --squash`). Never run two `afk-merge-pr` calls concurrently in mutex mode. Never bypass either mechanism. In mutex mode, every merge bumps `base_branch_tip` and flags all other in-flight slots `needs_rebase`.
 14. **Parallel mode: slot affinity is mandatory.** Once slot `k` claims a PR, every subsequent dispatch for that PR runs in slot `k` until the PR is merged or marked unmergeable. Migrating a PR across slots loses local context (uncommitted progress, build artifacts) and breaks the dirty-tree guard.
-15. **Parallel mode: every Coder/Reviewer/Address dispatch uses `run_in_background: true`.** The orchestrator's tick loop relies on harness completion notifications, not synchronous returns. Sequential mode keeps synchronous dispatch.
+15. **Every Coder/Reviewer/Address dispatch — both modes — uses `run_in_background: true`** so it is visible in the agent display. The orchestrator drives on harness completion notifications; it never polls, sleep-waits, or arms a `ScheduleWakeup` watchdog. If a child wedges inside a tool call, the operator sees it frozen in the display (no forward tool activity) and intervenes — there is no auto-kill.
 16. **Parallel mode: cleanup-issue concurrency is comment-append-only.** Body edits race across slots and silently lose entries; appending structured comments is the only safe pattern. (Mechanic implemented in the afk-* subskills, not here — but ship-feature must not attempt body edits to the cleanup issue from inside the parallel scheduler.)
 
 ## Edge Cases
@@ -601,7 +688,7 @@ Agent(
 - **Round 7 hit on a child with Axis-A blockers still open** → force-concede with `--force-axis-a`, force-merge with cleanup linkage; the 🚨 marker on the cleanup entry makes Axis-A residue visible
 - **Master branch protection blocks the final PRD→master merge** → leave PR open, log to cleanup, report; leave the worktree in place so the user can inspect
 - **Cleanup issue manually closed mid-run** → re-create on next concern (fresh title), log the gap
-- **`--dry-run`** → walk the state machine and print intended actions; no `Agent` dispatches, no `gh` mutations, no `git` mutations (including no `git worktree add` / `git worktree remove`), no `dotnet test` runs. Print the worktree path that *would* be used. **With `--parallel <N>`, also print the DAG (nodes + edges + initial ready_set) and a simulated tick-by-tick scheduler trace** showing which child each slot claims at each tick under ideal-completion assumptions — the goal is to expose schedule shape, not predict timing.
+- **`--dry-run`** → walk the state machine and print intended actions; no `Agent` dispatches, no `gh` mutations, no `git` mutations (including no `git worktree add` / `git worktree remove`), no check-command runs. Print the worktree path that *would* be used. **With `--parallel <N>`, also print the DAG (nodes + edges + initial ready_set) and a simulated tick-by-tick scheduler trace** showing which child each slot claims at each tick under ideal-completion assumptions — the goal is to expose schedule shape, not predict timing.
 - **Worktree already exists at the target path** → reuse it; do not delete or recreate. GitHub state remains the source of truth for resumption; the worktree just holds the local checkout.
 - **Worktree creation fails** (e.g., path occupied by a non-worktree directory, or `<base-branch>` already checked out elsewhere) → log a `[worktree-setup-failed]` cleanup-issue entry, stop. The user can manually `git worktree remove` or rename the colliding directory and re-invoke.
 - **User's main repo has `<base-branch>` checked out** → `git worktree add` will refuse to claim a branch already checked out. Log `[worktree-base-branch-claimed]` and stop with a message asking the user to switch their main checkout to a different branch and re-invoke.
@@ -618,8 +705,6 @@ Agent(
 ## Examples
 
 See `examples/` for:
-- `successful-run.md` — clean PRD shipped end-to-end
-- `run-with-cleanup.md` — PRD shipped with Axis-B concessions
-- `regression-skip-scenario.md` — child shipped via forced merge after pre-existing regression
-- `conflicting-ac-scenario.md` — AC vs review thread conflict, AC followed, cleanup logged
 - `cleanup-issue-template.md` — canonical structure of the `[ship-cleanup]` issue
+
+(The donor also carried four worked run narratives — successful run, run with Axis-B concessions, forced merge after a pre-existing regression, AC-vs-review-thread conflict. They were donor-numbered/domain-flavored and were not ported; the state-machine sections above cover every path they illustrated.)

@@ -1,6 +1,6 @@
 ---
 name: afk-merge-pr
-description: Autonomous-mode variant of /merge-pr. Verifies merge-readiness, squash-merges, deletes the branch, closes linked issues, and emits a structured JSON return for the orchestrator. Supports a forced-merge flag (--force) for orchestrators after concession has been applied, and a single-issue mode flag (--single) for PRs merging directly into master via /ship-issue. Invoked by /ship-feature (PRD mode) or /ship-issue (--single mode). Do not invoke directly from the CLI; use /merge-pr for human-driven flow.
+description: Autonomous-mode variant of /merge-pr. Verifies merge-readiness, squash-merges, deletes the branch, closes linked issues, and emits a structured JSON return for the orchestrator. Supports a forced-merge flag (--force) for orchestrators after concession has been applied, and a single-issue mode flag (--single) for PRs merging directly into the default branch via /ship-issue. Invoked by /ship-feature (PRD mode) or /ship-issue (--single mode). Do not invoke directly from the CLI; use /merge-pr for human-driven flow.
 ---
 
 # AFK Merge PR
@@ -9,7 +9,9 @@ Autonomous-mode fork of `/merge-pr`. Same merge-and-close logic with three struc
 
 1. **Structured JSON return** for the orchestrator
 2. **Forced-merge mode** (`--force` flag) for the orchestrator flow when blocker threads have been conceded by `/afk-concede-thread` and a 🚨 PR comment is posted before merge
-3. **Single-issue mode** (`--single` flag) for PRs targeting master directly (light-flow `/ship-issue`), bypassing the PRD-base-branch structural guard
+3. **Single-issue mode** (`--single` flag) for PRs targeting the default branch directly (light-flow `/ship-issue`), bypassing the PRD-base-branch structural guard
+
+**Repo facts come from the profile** (`.claude/doctrine/project-profile.md`). Where this skill says `master`, use the repo's default branch (resolve once: `gh repo view --json defaultBranchRef`); JSON `result` names stay verbatim.
 
 ## Invocation
 
@@ -17,11 +19,15 @@ Autonomous-mode fork of `/merge-pr`. Same merge-and-close logic with three struc
 
 If no PR number, return `{"result": "missing_pr"}` and stop.
 
-- `--single`: target branch is expected to be `master` instead of `prd-*`. Used by `/ship-issue`.
+- `--single`: target branch is expected to be the default branch instead of `prd-*`. Used by `/ship-issue`.
 - `--force`: skips review-gate and unresolved-threads gates. Used by both orchestrators after concession. Requires the cleanup-issue number for the pre-merge 🚨 PR comment.
 - `--auto`: invoke GitHub auto-merge (`gh pr merge --auto --squash --delete-branch`) instead of a synchronous merge. Used by `/ship-feature --parallel <N>` so GitHub's merge queue linearizes candidates without blocking the orchestrator. The PR is enqueued; the actual merge happens when required checks pass against the latest base tip. Return `{"result": "merge_queued", "pr_number": <n>, "queued_at": "<iso>"}` immediately after queueing, without waiting for the merge to complete. The orchestrator polls `mergedAt` separately. Skip Step 6 (close linked issues) in `--auto` mode — close-on-merge runs in a follow-up tick once the orchestrator observes the merge.
 
 Flags can combine: `--single --force <cleanup>` is valid (force-merge of a single-issue PR after round-7 concession). `--auto --force <cleanup>` is valid (force-enqueue after concession). `--auto --single` is invalid (`/ship-issue` is sequential; reject the combination).
+
+## Step 0.0 — Resilience setup (mandatory)
+
+Apply `.claude/skills/_afk-shared/resilience.md` §1 for the whole run: wrap every `gh` call and every remote `git` call (`fetch`/`pull`/`push`/`clone`/`ls-remote`/remote-ref `checkout`) as `GH_PAGER=cat GIT_PAGER=cat GIT_TERMINAL_PROMPT=0 timeout <N> <cmd>` — `N=120` for gh metadata/GraphQL, `N=180` for fetch/pull/checkout. On a second timeout, take this skill's documented failure path and note `[hang-timeout]`. **This skill runs inline in the orchestrator's own loop (not as a separate background Agent), so §1 is its only protection against a hang freezing the orchestrator** — there is no heartbeat to emit here.
 
 ## Step 0 — Orchestrated-mode preamble
 
@@ -57,9 +63,11 @@ query($owner: String!, $repo: String!, $pr: Int!) {
       url
       state
       headRefName
+      headRefOid
       baseRefName
-      reviewDecision
       reviewThreads(first: 100) { nodes { isResolved } }
+      latestReviews(first: 50) { nodes { state author { login } } }
+      reviews(last: 20) { nodes { body state submittedAt author { login } } }
     }
   }
 }' -f owner=<owner> -f repo=<repo> -F pr=<pr-number>
@@ -72,12 +80,30 @@ If `state != "OPEN"`:
 {"result": "pr_not_open", "pr_state": "..."}
 ```
 
-Standard merge gate (skip if `--force`):
-- **Review gate**: `reviewDecision == "APPROVED"`, **OR** `reviewDecision == null` AND at least one review body starts with `Claude comment 🤖` AND all `reviewThreads` are resolved
-- **`reviewDecision == "CHANGES_REQUESTED"`** → block:
+Standard merge gate (skip if `--force`). **Resolve the verdict per [`../_shared/review-protocol.md`](../_shared/review-protocol.md) §4** — the verdict is the `**Verdict: …**` marker in the newest `Claude comment 🤖` review body. Native review *state* is read from `latestReviews`; **never** from `reviewDecision`, which requires branch protection with a review requirement and is `null` on most repos regardless of identity mode. The marker is authoritative in both modes, so this gate is identity-independent.
+
+- **Native `CHANGES_REQUESTED`** (any `latestReviews` entry with `state == "CHANGES_REQUESTED"`) → block. Authoritative over any marker:
   ```json
   {"result": "changes_requested", "pr_url": "..."}
   ```
+- **Stale review** — marker's reviewed SHA ≠ `headRefOid` → block. The approval graded a commit that is no longer the head:
+  ```json
+  {"result": "review_stale", "reviewed_sha": "<sha>", "head_sha": "<headRefOid>"}
+  ```
+- **Verdict `REQUEST_CHANGES`** → block:
+  ```json
+  {"result": "changes_requested", "pr_url": "..."}
+  ```
+- **Verdict `COMMENT`** → block. A comment review is not an approval, even with every thread resolved:
+  ```json
+  {"result": "not_approved", "verdict": "comment"}
+  ```
+- **No parseable marker** → any `latestReviews` entry with `state == "APPROVED"` (native approval) passes; otherwise block:
+  ```json
+  {"result": "not_reviewed"}
+  ```
+  A `Claude comment 🤖` body with no marker predates this protocol — treat as `COMMENT`, never as approval.
+- **Verdict `APPROVE`** → pass, subject to the thread check below.
 - **All reviewThreads.isResolved == true** — if not:
   ```json
   {"result": "unresolved_threads", "unresolved_count": <n>}
@@ -87,12 +113,20 @@ Standard merge gate (skip if `--force`):
     ```json
     {"result": "structural_bug_master_target"}
     ```
-  - `--single` mode: `baseRefName` must equal `master`. If not:
+  - `--single` mode: `baseRefName` must equal the default branch. If not:
     ```json
-    {"result": "structural_bug_wrong_base", "expected": "master", "actual": "<baseRefName>"}
+    {"result": "structural_bug_wrong_base", "expected": "<default-branch>", "actual": "<baseRefName>"}
     ```
 
 **Force mode**: skip the review gate and unresolved-threads gate. Still require `state == "OPEN"` and a base-branch match per mode. The orchestrator guarantees concessions have been applied before calling with `--force`.
+
+Staleness is **evaluated but not enforced** under `--force`: if the marker SHA ≠ `headRefOid`, set `stale_review_forced: true`, add a line to the Step 4 🚨 comment naming both SHAs, and proceed. `--force` is the pipeline's guarantee that the loop always terminates — a gate it cannot clear would deadlock the orchestrator, which is worse than merging conceded work whose last commit went ungraded. In practice concession resolves threads without pushing code, so the SHAs normally still match.
+
+## Step 2.5 — Profile-declared merge-time gate (non-concedable) and pre-merge steps
+
+Applies only if the profile's Merge gates section (or its `design_pipeline` doctrine) declares a merge-time command that CI does not already run — donor: a frontend `npm run build` the CI workflow never invokes. Run it on the PR head when the PR touches the declared path. Red → return `build_failed`; the orchestrator routes back to `/afk-address-pr` exactly like `merge_conflict`. `--force` does not bypass it: a broken build breaks every downstream consumer and is almost always a one-line fix. If the profile declares nothing, set `build_gate: "skipped"`.
+
+Then, still before the squash, run any **pre-merge steps** the `design_pipeline` doctrine declares on the PR head (donor: promoting accepted design baselines so they ride in the squash commit). Best-effort: note the outcome, never block or return a failure for them.
 
 ## Step 3 — Identify linked issue(s)
 
@@ -168,13 +202,27 @@ gh issue close <issue-number> \
 
 If close fails, retry once. On second failure, log to return as `issue_close_failed: [<issue-number>]` but do not roll back the merge.
 
+## Step 6.5 — Publish the executable wire-contract artifact (default-branch-landing merges only)
+
+Applies only if the profile's External contracts section declares an executable wire-contract artifact with a post-merge publish step (donor: a repo-owned Postman collection published to the canonical cloud workspace via its sync tool). If the profile declares none, skip — set `postman_pushed: false`, `postman_push_pending: false`.
+
+If the merge landed on **the default branch** (`--single` mode, or a PRD finalize PR) and the PR diff touched the artifact's path (`gh pr diff <pr-number> --name-only | grep -q '^<artifact-path>/'`), run the profile's publish command **autonomously** — the routes are on the default branch now, so publishing is safe. The publish tool should guard `HEAD == origin/<default-branch>`, diff the remote, report any overwrites, push, and verify (the donor's did).
+
+On exit 0 set `postman_pushed: true` (name any overwrite warnings in `notes`). On non-zero exit (missing credential, `HEAD` ≠ default branch, API error) set `postman_push_pending: true` and name the publish command in `notes` as the fallback.
+
+(The `postman_*` field names are retained verbatim — they are the orchestrator contract; read them as "wire-contract artifact publish" flags in repos whose artifact isn't Postman.)
+
+## Step 6.6 — Profile-declared post-merge steps
+
+Applies only if the profile's `design_pipeline` doctrine declares post-merge procedures (donor: refreshing a code-sourced design mirror after a frontend merge). **Skip in `--auto` mode** — the merge is queued, not landed. Otherwise run them as that doctrine writes them, on the base branch, best-effort: set `mirror_refresh: "done" | "skipped" | "failed"` in the return and continue — never roll back or block.
+
 ## Step 7 — Emit structured return
 
 ```json
 {
   "skill": "afk-merge-pr",
   "mode": "prd" | "single",
-  "result": "merged" | "merge_queued" | "merge_conflict" | "merge_queue_disabled" | "branch_protection" | "changes_requested" | "unresolved_threads" | "structural_bug_master_target" | "structural_bug_wrong_base" | "pr_not_open" | "dirty_tree_foreign" | "missing_pr",
+  "result": "merged" | "merge_queued" | "merge_conflict" | "build_failed" | "merge_queue_disabled" | "branch_protection" | "changes_requested" | "review_stale" | "not_approved" | "not_reviewed" | "unresolved_threads" | "structural_bug_master_target" | "structural_bug_wrong_base" | "pr_not_open" | "dirty_tree_foreign" | "missing_pr",
   "auto_mode": <bool>,
   "queued_at": "<iso>" | null,
   "pr_number": <n>,
@@ -185,19 +233,23 @@ If close fails, retry once. On second failure, log to return as `issue_close_fai
   "linked_issues_missing": <bool>,
   "issue_close_failed": [<n>...],
   "force_mode": <bool>,
+  "stale_review_forced": <bool>,
   "single_mode": <bool>,
   "cleanup_issue_referenced": <n> | null,
   "base_branch": "...",
+  "postman_pushed": <bool>,
+  "postman_push_pending": <bool>,
   "notes": "..."
 }
 ```
 
 ## Critical Rules
 
-1. **Never merge without a passing review gate** unless `--force` was passed.
+1. **Never merge without an `APPROVE` verdict against the current head** unless `--force` was passed. The verdict is the review-body marker; native state comes from `latestReviews`. `reviewDecision` is never consulted — it needs branch protection to be populated at all. A `COMMENT` verdict with all threads resolved is **not** an approval.
+1b. **Never merge on a stale approval in the standard gate.** Marker SHA ≠ `headRefOid` → `review_stale`; the orchestrator routes back to review. Under `--force` this is **recorded, not enforced** (`stale_review_forced: true` + a line in the 🚨 comment) — `--force` is the pipeline's termination guarantee and must always be able to complete.
 2. **Never merge with unresolved review threads** unless `--force` was passed.
 3. **Never bypass branch protection.**
-4. **Never merge a PR targeting master in PRD mode** — that's a structural bug from upstream. In `--single` mode, targeting master is required.
+4. **Never merge a PR targeting the default branch in PRD mode** — that's a structural bug from upstream. In `--single` mode, targeting the default branch is required.
 5. **Always close linked issues after merge** — that is the load-bearing reason this skill exists over a raw `gh pr merge`.
 6. **Never reopen a closed issue to "re-close it cleanly".**
 7. **`--force` requires a cleanup-issue number** and posts the 🚨 PR comment before merge. Never `--force` without the comment.
@@ -206,6 +258,9 @@ If close fails, retry once. On second failure, log to return as `issue_close_fai
 ## Edge Cases
 
 - **PR already merged** → emit `result: merged`, populate `merge_commit` from existing state, still close any open linked issues
+- **Approval exists but a later commit landed** → `review_stale`; orchestrator routes back to REVIEW, not to ADDRESS — the code may well be fine, it just hasn't been graded
+- **Review body has the `Claude comment 🤖` prefix but no verdict marker** → pre-protocol review; treat as `COMMENT` → `not_approved`. One fresh review pass clears it
+- **Red profile-declared merge gate (Step 2.5)** → return `build_failed`; orchestrator routes back to `/afk-address-pr`, exactly like `merge_conflict`. Never conceded, never force-merged past.
 - **Merge conflict with base** → return `merge_conflict`; orchestrator routes back to `/afk-address-pr` for rebase
 - **PR closes multiple issues** → close all, each with its own comment
 - **Linked issue belongs to different repo** → skip, note in return
