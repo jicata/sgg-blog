@@ -1,0 +1,86 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
+import { getPublishedPosts, formatDate, readingTime } from '../../lib/content';
+import { href } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<Base
+  title={`${post.data.title} — Svetlin Galov`}
+  description={post.data.description}
+  ogType="article"
+  publishedTime={post.data.pubDate}
+  canonical={new URL(href(`/posts/${post.id}/`), Astro.site).toString()}
+>
+  <div class="container">
+    <div class="post-layout">
+      <article class="post-article">
+        <header class="post-header">
+          <h1 class="text-display-l">{post.data.title}</h1>
+          <p class="text-body-l dek">{post.data.description}</p>
+          <p class="text-code byline">
+            {formatDate(post.data.pubDate)} · {readingTime(post.body)}
+            {post.data.updatedDate && <> · Updated {formatDate(post.data.updatedDate)}</>}
+          </p>
+        </header>
+
+        <div class="prose prose-width post-body">
+          <Content />
+        </div>
+      </article>
+
+      <TableOfContents headings={headings} />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .post-layout {
+    padding-block: var(--space-8) var(--space-9);
+    display: flex;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .post-article {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .post-header {
+    max-width: var(--prose);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+
+  .post-header h1 {
+    color: var(--fg);
+  }
+
+  .dek {
+    color: var(--fg-muted);
+  }
+
+  .byline {
+    color: var(--fg-dim);
+  }
+
+  .post-body {
+    margin-top: 0;
+  }
+</style>

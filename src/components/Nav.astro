@@ -1,0 +1,83 @@
+---
+// Site navigation. Home & About only — Projects and Contact are folded into About (PRD #21).
+import { href } from '../lib/url';
+
+const path = Astro.url.pathname;
+const isHome = path === href('/');
+const isAbout = path === href('/about/');
+---
+
+<header class="nav-header">
+  <div class="container nav-row">
+    <a href={href('/')} class="brand text-ui">Svetlin Galov</a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li>
+          <a href={href('/')} class="nav-item text-ui" aria-current={isHome ? 'page' : undefined}>
+            Home
+          </a>
+        </li>
+        <li>
+          <a href={href('/about/')} class="nav-item text-ui" aria-current={isAbout ? 'page' : undefined}>
+            About
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav-header {
+    border-bottom: var(--border-width) solid var(--border);
+  }
+
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding-block: var(--space-4);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    padding-block: var(--space-3);
+    margin-block: calc(var(--space-3) * -1);
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .brand:hover {
+    color: var(--accent);
+  }
+
+  .nav-list {
+    display: flex;
+    list-style: none;
+    gap: var(--space-6);
+  }
+
+  .nav-item {
+    display: inline-flex;
+    align-items: center;
+    color: var(--fg-muted);
+    text-decoration: none;
+    padding-block: var(--space-3);
+    margin-block: calc(var(--space-3) * -1);
+    border-bottom: var(--border-width) solid transparent;
+    transition:
+      color var(--duration) var(--ease),
+      border-color var(--duration) var(--ease);
+  }
+
+  .nav-item:hover {
+    color: var(--fg);
+  }
+
+  .nav-item[aria-current='page'] {
+    color: var(--fg);
+    border-bottom-color: var(--accent);
+  }
+</style>

@@ -1,0 +1,454 @@
+/*
+  Global design tokens — ported 1:1 from specs/design-handoff/design-spec.md
+  (SS 2-7, 10-11). No literal color, font, or spacing value belongs anywhere
+  outside this file — see .claude/rules/site.md and profile -> Frontend.
+*/
+
+:root {
+  /* ---- 2. Type: families ---- */
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Charter, 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ---- 2. Type scale (rem, root = 16px; line-heights unitless) ---- */
+  --text-display-xl-size: 3.5rem;
+  --text-display-xl-line: 1.0714;
+  --text-display-xl-weight: 600;
+  --text-display-xl-family: var(--font-sans);
+  --text-display-xl-tracking: -0.01em;
+
+  --text-display-l-size: 2.75rem;
+  --text-display-l-line: 1.1818;
+  --text-display-l-weight: 600;
+  --text-display-l-family: var(--font-sans);
+  --text-display-l-tracking: -0.01em;
+
+  --text-h1-size: 2rem;
+  --text-h1-line: 1.25;
+  --text-h1-weight: 600;
+  --text-h1-family: var(--font-sans);
+  --text-h1-tracking: -0.01em;
+
+  --text-h2-size: 1.5rem;
+  --text-h2-line: 1.3333;
+  --text-h2-weight: 600;
+  --text-h2-family: var(--font-sans);
+  --text-h2-tracking: -0.01em;
+
+  --text-h3-size: 1.125rem;
+  --text-h3-line: 1.4444;
+  --text-h3-weight: 600;
+  --text-h3-family: var(--font-sans);
+  --text-h3-tracking: normal;
+
+  --text-body-l-size: 1.125rem;
+  --text-body-l-line: 1.6667;
+  --text-body-l-weight: 400;
+  --text-body-l-family: var(--font-serif);
+
+  --text-body-size: 1rem;
+  --text-body-line: 1.625;
+  --text-body-weight: 400;
+  --text-body-family: var(--font-serif);
+
+  --text-body-s-size: 0.875rem;
+  --text-body-s-line: 1.5714;
+  --text-body-s-weight: 400;
+  --text-body-s-family: var(--font-serif);
+
+  --text-ui-size: 0.9375rem;
+  --text-ui-line: 1.4667;
+  --text-ui-weight: 500;
+  --text-ui-family: var(--font-sans);
+
+  --text-ui-s-size: 0.8125rem;
+  --text-ui-s-line: 1.5385;
+  --text-ui-s-weight: 500;
+  --text-ui-s-family: var(--font-sans);
+
+  --text-label-size: 0.6875rem;
+  --text-label-line: 1.2727;
+  --text-label-weight: 500;
+  --text-label-family: var(--font-mono);
+  --text-label-tracking: 0.08em;
+
+  --text-code-size: 0.875rem;
+  --text-code-line: 1.5714;
+  --text-code-weight: 400;
+  --text-code-family: var(--font-mono);
+
+  /* ---- 3. Color: surface ---- */
+  --bg: oklch(0.16 0.012 250);
+  --surface-1: oklch(0.20 0.012 250);
+  --surface-2: oklch(0.24 0.012 250);
+  --surface-3: oklch(0.28 0.012 250);
+  --border: oklch(0.30 0.012 250);
+  --border-strong: oklch(0.42 0.012 250);
+
+  /* ---- 3. Color: foreground ---- */
+  --fg: oklch(0.95 0.006 250);
+  --fg-muted: oklch(0.72 0.006 250);
+  --fg-dim: oklch(0.55 0.006 250);
+  --fg-faint: oklch(0.40 0.012 250);
+
+  /* ---- 3. Color: accent ---- */
+  --accent: oklch(0.78 0.10 75);
+  --accent-strong: oklch(0.85 0.12 75);
+  --accent-fg: oklch(0.18 0.012 250);
+
+  /* ---- 4. Spacing (4pt grid) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+
+  /* ---- 4. Containers ---- */
+  --container: 1120px;
+  --prose: 720px;
+  --wide: 1280px;
+  --container-pad: 24px;
+  --toc-width: 240px;
+  --measure-narrow: 480px;
+
+  /* ---- 5. Radii / borders ---- */
+  --radius-1: 2px;
+  --radius-2: 6px;
+  --radius-3: 10px;
+  --radius-4: 14px;
+  --border-width: 1px;
+  --border-width-strong: 2px;
+
+  /* ---- 6. Motion ---- */
+  --duration-fast: 120ms;
+  --duration: 200ms;
+  --duration-slow: 320ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --container-pad: 48px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --container-pad: 64px;
+  }
+}
+
+/* ---- Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+picture,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---- Selection ---- */
+::selection {
+  background: oklch(0.78 0.10 75 / 0.25);
+}
+
+/* ---- Focus rings (SS 3, 11) — never removed without replacement ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Skip link (SS 11) ---- */
+.skip-link {
+  position: absolute;
+  top: -1000px;
+  left: var(--space-4);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-ui-size);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-2);
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+}
+
+/* ---- Layout primitives ---- */
+.container {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+
+.prose-width {
+  max-width: var(--prose);
+  margin-inline: auto;
+}
+
+/* ---- Type scale utility classes ---- */
+.text-display-xl {
+  font-family: var(--text-display-xl-family);
+  font-size: var(--text-display-xl-size);
+  line-height: var(--text-display-xl-line);
+  font-weight: var(--text-display-xl-weight);
+  letter-spacing: var(--text-display-xl-tracking);
+  text-wrap: balance;
+}
+
+.text-display-l {
+  font-family: var(--text-display-l-family);
+  font-size: var(--text-display-l-size);
+  line-height: var(--text-display-l-line);
+  font-weight: var(--text-display-l-weight);
+  letter-spacing: var(--text-display-l-tracking);
+  text-wrap: balance;
+}
+
+.text-h1 {
+  font-family: var(--text-h1-family);
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-line);
+  font-weight: var(--text-h1-weight);
+  letter-spacing: var(--text-h1-tracking);
+  text-wrap: pretty;
+}
+
+.text-h2 {
+  font-family: var(--text-h2-family);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  font-weight: var(--text-h2-weight);
+  letter-spacing: var(--text-h2-tracking);
+  text-wrap: pretty;
+}
+
+.text-h3 {
+  font-family: var(--text-h3-family);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  font-weight: var(--text-h3-weight);
+  text-wrap: pretty;
+}
+
+.text-body-l {
+  font-family: var(--text-body-l-family);
+  font-size: var(--text-body-l-size);
+  line-height: var(--text-body-l-line);
+  font-weight: var(--text-body-l-weight);
+  text-wrap: pretty;
+}
+
+.text-body {
+  font-family: var(--text-body-family);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  font-weight: var(--text-body-weight);
+  text-wrap: pretty;
+}
+
+.text-body-s {
+  font-family: var(--text-body-s-family);
+  font-size: var(--text-body-s-size);
+  line-height: var(--text-body-s-line);
+  font-weight: var(--text-body-s-weight);
+}
+
+.text-ui {
+  font-family: var(--text-ui-family);
+  font-size: var(--text-ui-size);
+  line-height: var(--text-ui-line);
+  font-weight: var(--text-ui-weight);
+}
+
+.text-ui-s {
+  font-family: var(--text-ui-s-family);
+  font-size: var(--text-ui-s-size);
+  line-height: var(--text-ui-s-line);
+  font-weight: var(--text-ui-s-weight);
+}
+
+.text-label {
+  font-family: var(--text-label-family);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-line);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: uppercase;
+}
+
+.text-code {
+  font-family: var(--text-code-family);
+  font-size: var(--text-code-size);
+  line-height: var(--text-code-line);
+  font-weight: var(--text-code-weight);
+}
+
+@media (max-width: 639px) {
+  .text-display-l {
+    font-size: 2rem;
+  }
+}
+
+/* ---- Prose (article / About story body) ---- */
+.prose {
+  font-family: var(--font-serif);
+  color: var(--fg-muted);
+}
+
+.prose > * + * {
+  margin-top: 0.85em;
+}
+
+.prose h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-line);
+  letter-spacing: var(--text-h2-tracking);
+  color: var(--fg);
+  margin-top: var(--space-8);
+  text-wrap: pretty;
+}
+
+.prose h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-line);
+  color: var(--fg);
+  margin-top: var(--space-6);
+  text-wrap: pretty;
+}
+
+.prose p {
+  font-size: var(--text-body-l-size);
+  line-height: var(--text-body-l-line);
+  color: var(--fg-muted);
+}
+
+.prose strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  text-decoration-thickness: 1px;
+  transition: color var(--duration) var(--ease);
+}
+
+.prose a:hover {
+  color: var(--accent-strong);
+  text-decoration-thickness: 2px;
+}
+
+.prose blockquote {
+  border-left: 1px solid var(--border-strong);
+  padding-left: var(--space-5);
+  font-style: italic;
+  color: var(--fg-muted);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-3);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-1);
+}
+
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: var(--text-code-size);
+  line-height: var(--text-code-line);
+  background: var(--surface-3);
+  border-radius: var(--radius-3);
+  padding: var(--space-5);
+  overflow-x: auto;
+  border: var(--border-width) solid var(--border);
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--space-6);
+  color: var(--fg-muted);
+  font-family: var(--font-serif);
+  font-size: var(--text-body-l-size);
+  line-height: var(--text-body-l-line);
+}
+
+.prose li + li {
+  margin-top: 0.5em;
+}
+
+/* ---- prefers-reduced-motion (SS 11) ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

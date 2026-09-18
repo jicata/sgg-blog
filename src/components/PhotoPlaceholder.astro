@@ -1,0 +1,22 @@
+---
+// Placeholder box standing in for a portrait photo until one is supplied (open item, see report).
+// Shared across Home (80px) and About (120px) — a second real consumer from the start.
+interface Props {
+  size: number;
+}
+
+const { size } = Astro.props;
+---
+
+<div class="photo-placeholder" style={`--photo-size: ${size}px`} aria-hidden="true"></div>
+
+<style>
+  .photo-placeholder {
+    width: var(--photo-size);
+    height: var(--photo-size);
+    flex-shrink: 0;
+    background: var(--surface-1);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-3);
+  }
+</style>

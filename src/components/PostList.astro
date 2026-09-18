@@ -1,0 +1,73 @@
+---
+// Renders a list of posts. Receives resolved entries via props; never reads the collection itself.
+import type { Post } from '../lib/content';
+import { formatDate, readingTime } from '../lib/content';
+import { href } from '../lib/url';
+
+interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<ul class="post-list">
+  {
+    posts.map((post) => (
+      <li class="post-row">
+        <a href={href(`/posts/${post.id}/`)} class="post-link">
+          <span class="post-date text-code">{formatDate(post.data.pubDate)}</span>
+          <span class="post-title text-h2">{post.data.title}</span>
+          <span class="post-description text-body">{post.data.description}</span>
+          <span class="post-meta text-ui-s">{readingTime(post.body)}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .post-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-row {
+    border-top: var(--border-width) solid var(--border);
+  }
+
+  .post-row:last-child {
+    border-bottom: var(--border-width) solid var(--border);
+  }
+
+  .post-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-block: var(--space-6);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .post-date {
+    color: var(--fg-dim);
+  }
+
+  .post-title {
+    color: var(--fg);
+    transition: color var(--duration) var(--ease);
+  }
+
+  .post-link:hover .post-title {
+    color: var(--accent);
+  }
+
+  .post-description {
+    color: var(--fg-muted);
+  }
+
+  .post-meta {
+    color: var(--fg-dim);
+  }
+</style>

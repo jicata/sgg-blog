@@ -1,10 +1,10 @@
 # SvetlinGalovBlog
 
-Personal portfolio + blog for a senior backend tech lead. **Target stack: Astro static site** — Markdown posts in `src/content/posts/`, plain CSS tokens, zero client JS by default, deployed to GitHub Pages from `main`. `main` still carries the old React SPA + .NET shell until the revamp PRD merges; do not extend it.
+Personal portfolio + blog for a senior backend tech lead. **Stack: Astro static site** — Markdown posts in `src/content/posts/`, plain CSS tokens, zero client JS by default, deployed to GitHub Pages from `main`.
 
 ## Where the rules actually live
 
-- **`.claude/doctrine/project-profile.md`** — this repo's constraints, each with the incident behind it. Read it first every session; read **Transition** before touching anything on `main`. It is the only writable skill surface; base files under `.claude/skills/` and `.claude/doctrine/` install verbatim from `jicata/skills`.
+- **`.claude/doctrine/project-profile.md`** — this repo's constraints, each with the incident behind it. Read it first every session. It is the only writable skill surface; base files under `.claude/skills/` and `.claude/doctrine/` install verbatim from `jicata/skills`.
 - **`.claude/doctrine/00-doctrine-index.md`** — which doctrine governs which activity.
 - **`.claude/rules/`** — path-scoped; loaded automatically when a matching file is opened.
 - Don't know which skill fits → `/ask-svet`.
