@@ -1,25 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
 import PhotoPlaceholder from '../components/PhotoPlaceholder.astro';
-import TagRow from '../components/TagRow.astro';
-import { getProjects } from '../lib/content';
-import { href } from '../lib/url';
-
-const CAPABILITY_TAGS = [
-  'C#',
-  '.NET',
-  'distributed systems',
-  'DDD',
-  'VSA',
-  'system design',
-  'agentic engineering',
-  'Claude Code',
-  'MCP',
-];
-
-const projects = await getProjects();
-const jobProjects = projects.filter((p) => !p.data.featured);
-const featured = projects.find((p) => p.data.featured);
 ---
 
 <Base
@@ -54,51 +35,9 @@ const featured = projects.find((p) => p.data.featured);
         and the kind of DDD that survives a year past the original whiteboard session.
       </p>
       <p>
-        What I'm building now: <a href={href('/projects/this-site-agent-augmented/')}>a case
-        study on agent-augmented engineering</a>, a Claude Code skill library going public
-        soon, and <em>Brochures</em> — a small agentic consumer tool I'll ship later this
-        year. None of these are generic "AI coding" pitches; they're the artifacts of doing
-        the work and keeping notes. If any of that is interesting, get in touch below.
+        What I'm building now: a <a href="https://jicata.github.io/skills/showcase/" target="_blank" rel="noreferrer">Claude Code skill library ↗</a>, now public, and <em>Brochures</em> — a small agentic consumer tool I'll ship later this year. Neither is a generic "AI coding" pitch — both are the artifacts of doing the work and keeping notes. If any of that is interesting, get in touch below.
       </p>
     </section>
-
-    <section class="what-i-work-on" aria-label="What I work on">
-      <p class="text-label section-label">What I work on</p>
-      <TagRow tags={CAPABILITY_TAGS} />
-    </section>
-
-    <section class="career" aria-label="Career">
-      <p class="text-label section-label">Career</p>
-      <div class="job-list">
-        {
-          jobProjects.map((project) => (
-            <div class="job">
-              <div class="job-head">
-                <h2 class="text-h2">{project.data.title}</h2>
-                <p class="text-ui-s job-role">{project.data.role} · {project.data.dates}</p>
-              </div>
-              <p class="text-body job-summary">{project.data.summary}</p>
-              <a href={href(`/projects/${project.id}/`)} class="text-ui-s read-more">
-                Read more →
-              </a>
-            </div>
-          ))
-        }
-      </div>
-    </section>
-
-    {
-      featured && (
-        <section class="featured-case-study" aria-label="Featured case study">
-          <a href={href(`/projects/${featured.id}/`)} class="featured-link">
-            <p class="text-label eyebrow">CASE STUDY · AGENTIC ENGINEERING</p>
-            <h2 class="text-h1 featured-title">{featured.data.title}</h2>
-            <p class="text-body featured-summary">{featured.data.summary}</p>
-            <TagRow tags={featured.data.tags} />
-          </a>
-        </section>
-      )
-    }
 
     <section class="get-in-touch" aria-label="Get in touch">
       <p class="text-label section-label">Get in touch</p>
@@ -168,72 +107,6 @@ const featured = projects.find((p) => p.data.featured);
     margin-bottom: var(--space-5);
   }
 
-  .job-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-5);
-  }
-
-  .job {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    background: var(--surface-1);
-    border: var(--border-width) solid var(--border);
-    border-radius: var(--radius-3);
-    padding: var(--space-5);
-  }
-
-  .job-head h2 {
-    color: var(--fg);
-  }
-
-  .job-role {
-    color: var(--fg-dim);
-    margin-top: var(--space-1);
-  }
-
-  .job-summary {
-    color: var(--fg-muted);
-  }
-
-  .read-more {
-    color: var(--accent);
-    text-decoration: none;
-    margin-top: auto;
-  }
-
-  .read-more:hover {
-    color: var(--accent-strong);
-  }
-
-  .featured-case-study {
-    border-radius: var(--radius-4);
-    background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
-    border: var(--border-width) solid var(--border-strong);
-  }
-
-  .featured-link {
-    display: flex;
-    text-decoration: none;
-    padding: var(--space-7);
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
-  .eyebrow {
-    color: var(--accent);
-  }
-
-  .featured-title {
-    color: var(--fg);
-  }
-
-  .featured-summary {
-    color: var(--fg-muted);
-    max-width: var(--prose);
-  }
-
   .touch-copy {
     color: var(--fg-muted);
     max-width: var(--prose);
@@ -255,12 +128,6 @@ const featured = projects.find((p) => p.data.featured);
     color: var(--accent-strong);
   }
 
-  @media (max-width: 767px) {
-    .job-list {
-      grid-template-columns: 1fr;
-    }
-  }
-
   @media (max-width: 639px) {
     .hero {
       flex-direction: column;
@@ -269,6 +136,7 @@ const featured = projects.find((p) => p.data.featured);
     }
 
     .hero-copy {
+      flex: 1 1 auto;
       align-items: center;
     }
   }

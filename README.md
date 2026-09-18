@@ -36,7 +36,7 @@ The post body goes here, as plain Markdown.
 
 `description`, `pubDate` (and `title`) are required; `updatedDate`, `tags`, and `draft` are optional. Set `draft: true` to keep a post out of the production build, the post list, RSS, and the sitemap — it stays visible in `npm run dev`. That's the only place drafts are filtered: `src/lib/content.ts`'s `getPublishedPosts()`. Nothing else needs to change; publishing is `git push`.
 
-Adding a project (a career case study) works the same way under `src/content/projects/` — see `src/content.config.ts` for that collection's schema.
+Adding a project (a career case study) works the same way under `src/content/projects/` — see `src/content.config.ts` for that collection's schema. The Projects collection is retained but unrouted (2026-09-18): adding or editing a file there changes nothing on the live site until a route exists again.
 
 ## Build gate
 

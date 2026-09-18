@@ -69,6 +69,8 @@ None — no live environments, databases, or secrets are reachable from this rep
 
 > **Content schema changes are an ADR-gated decision.** Renaming or removing a frontmatter field breaks every existing post silently until the build runs. Add fields as optional; remove nothing without a migration of every file in the same PR. Evidence: convention set at adoption, 2026-09-18.
 
+> **The Projects collection is retained but unrouted by owner decision (2026-09-18); do not add routes, nav links or About sections for it without asking.** WHY: the owner dropped the career-arc case studies and the About "What I work on"/Career sections as premature — there was no real case-study content behind them yet, and the site's job right now is the blog, not a portfolio pitch. The Markdown files under `src/content/projects/` and the `projects` collection in `src/content.config.ts` stay so the content isn't lost, but `src/pages/projects/[slug].astro` was deleted and nothing links to `/projects/*`. Evidence: owner instruction, 2026-09-18; `git log` on the `hide-projects` branch.
+
 ## Frontend
 
 Base doctrine: `doctrine/arch-frontend.md` governs structure (page vs component boundary, promotion rule, one component per file). There is **no framework core** for Astro in the base library — `frontend_core: none` — so Astro idiom is recorded here until one exists upstream.
@@ -78,6 +80,8 @@ Base doctrine: `doctrine/arch-frontend.md` governs structure (page vs component 
 > **Zero client JavaScript by default. `<script>` tags and framework islands need a named reason in the PR.** WHY: page weight and simplicity are the revamp's success criteria; every island is a runtime the site did not have. Evidence: operator's brief, 2026-09-18.
 
 > **Colors, type and spacing come from the CSS custom properties in `src/styles/global.css`, ported 1:1 from the locked May-2026 design spec. No literal color, font or pixel value in a component.** WHY: the design was locked in May 2026 after a full design pass; ad-hoc values are how it erodes. Evidence: main's git history: `specs/design-handoff/README.md` (deleted in PRD #21), ADR-001 Decision 1 (OKLCH tokens).
+
+> **In `.astro` prose, never put an inline tag (`<a>`, `<strong>`, `<em>`) at the start of a source line when the previous line ends with a word — keep the tag on the same line as the word before it. After any prose edit, run `grep -roE '[a-zA-Z,;:.)]<(a |strong>|em>)|</(a|strong|em)>[a-zA-Z(]' dist` after `npm run build`; it must return nothing.** WHY: Astro's compiler drops the line-break whitespace between a trailing text node and an element opening the next line, so words fuse on screen ("is onthe About page", "aClaude Code skill library"); the build gate cannot see it. Evidence: PR #22 review round 1 (two instances on Home and About) and the hide-projects branch review, both 2026-09-18.
 
 ## Testing
 
