@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Verify an approved PR is merge-ready, squash-merge it, delete the branch, and explicitly close the linked issue(s). Required because PRs created by /execute-issue target the PRD's base branch (not master), so GitHub's keyword auto-close does not fire. Use when the user says "/merge-pr <pr-number>" after /review-pr has approved the PR with all threads resolved.
+description: Verify an approved PR is merge-ready, squash-merge it, delete the branch, and explicitly close the linked issue(s). Required because PRs created by /execute-issue target the PRD's base branch (not the default branch), so GitHub's keyword auto-close does not fire. Use when the user says "/merge-pr <pr-number>" after /review-pr has approved the PR with all threads resolved.
 ---
 
 # Merge PR
@@ -15,7 +15,7 @@ If no PR number is given, ask. Do not guess.
 
 ## Why this skill exists
 
-PRs created by `/execute-issue` target the PRD's **base branch** (`prd-<prd-number>-<slug>`), not `master`. GitHub's keyword-driven issue auto-close (the `Fixes #N` behavior) only fires when a PR merges into the repository's default branch. Merging into a base branch leaves the linked issue open, and the PRD's child-issue tracker silently drifts out of sync with reality. This skill closes the linked issue(s) explicitly as part of the merge so the tracker stays accurate.
+PRs created by `/execute-issue` target the PRD's **base branch** (`prd-<prd-number>-<slug>`), not the default branch. GitHub's keyword-driven issue auto-close (the `Fixes #N` behavior) only fires when a PR merges into the repository's default branch. Merging into a base branch leaves the linked issue open, and the PRD's child-issue tracker silently drifts out of sync with reality. This skill closes the linked issue(s) explicitly as part of the merge so the tracker stays accurate.
 
 A plain `gh pr merge` would leave the issue open. Do not substitute one for this skill.
 
@@ -35,9 +35,11 @@ query($owner: String!, $repo: String!, $pr: Int!) {
       url
       state
       headRefName
+      headRefOid
       baseRefName
-      reviewDecision
       reviewThreads(first: 100) { nodes { isResolved } }
+      latestReviews(first: 50) { nodes { state author { login } } }
+      reviews(last: 20) { nodes { body state submittedAt author { login } } }
     }
   }
 }' -f owner=<owner> -f repo=<repo> -F pr=<pr-number>
@@ -48,12 +50,22 @@ query($owner: String!, $repo: String!, $pr: Int!) {
 Check **all** of the following. If any fails, stop and report — do not merge.
 
 1. `state == "OPEN"` — the PR must be open (not already merged or closed)
-2. Review gate — **one** of the following must be true:
-   - `reviewDecision == "APPROVED"` — a non-author reviewer has formally approved, **OR**
-   - `reviewDecision` is `null` AND at least one review body starts with `Claude comment 🤖` AND all `reviewThreads` are resolved — the PR author cannot self-approve on GitHub, so a clean `/review-pr` follow-up pass (all threads resolved, no new issues) is treated as equivalent
-   - `CHANGES_REQUESTED` always blocks → stop
+2. **Review gate** — resolve the verdict per [`../_shared/review-protocol.md`](../_shared/review-protocol.md) §4. In short:
+   - Any `latestReviews` entry with `state == "CHANGES_REQUESTED"` → stop. A reviewer who requested changes is authoritative over any marker. (Use `latestReviews`, **not** `reviewDecision` — that field is only populated when branch protection requires reviews, so it stays `null` here even for a genuine App-authored block.)
+   - Take the newest review whose body starts with `Claude comment 🤖` and parse `**Verdict: …** · reviewed at \`<sha>\``.
+   - **`<sha>` ≠ `headRefOid`** → stop as `review_stale`: the review graded a commit that is no longer the head. Suggest re-running `/review-pr <n>`. Do not merge on a stale approval.
+   - `REQUEST_CHANGES` → stop; suggest `/address-pr <n>`.
+   - `COMMENT` → stop. A comment review is not an approval, even with every thread resolved.
+   - `APPROVE` → pass.
+   - No parseable marker → fall back to any `latestReviews` entry with `state == "APPROVED"` (someone approved natively) → pass; anything else → stop as not reviewed. A `Claude comment 🤖` body with no marker predates this protocol — treat it as `COMMENT`, never as an approval, and re-review once to clear it.
 3. Every `reviewThreads.nodes[].isResolved == true` — no unresolved threads. If any are unresolved, stop and suggest `/address-pr <n>`.
-4. `baseRefName` starts with `prd-` — PRs from `/execute-issue` must target a base branch. If `baseRefName == "master"`, stop and report a structural bug upstream; do not merge past it.
+4. `baseRefName` starts with `prd-` — PRs from `/execute-issue` must target a base branch. If `baseRefName` is the default branch, stop and report a structural bug upstream; do not merge past it.
+
+### Step 2.5 — Profile-declared merge-time gate and pre-merge steps
+
+Applies only if the profile's Merge gates section (or its `design_pipeline` doctrine) declares a merge-time command that CI does not already run — donor: a frontend `npm run build` that the CI workflow never invokes, so a Vite-only failure would otherwise land green. Run it on the PR's worktree when the PR touches the declared path. Red → stop and report `build_failed`; this is not a standards opinion and is never conceded or forced past. If the profile declares nothing, skip.
+
+Then, still before the squash, run any **pre-merge steps** the `design_pipeline` doctrine declares on the PR head (donor: promoting accepted design baselines so they ride in the squash commit). Best-effort: report, never block the merge on them.
 
 ### Step 3 — Identify the linked issue(s)
 
@@ -75,6 +87,14 @@ gh pr view <pr-number> --json state,mergedAt,mergeCommit
 
 Expected: `state == "MERGED"`, `mergedAt` populated. If the merge failed (conflict with the base branch, protected-branch rule, required check pending or failing), **stop and report** — do not attempt to auto-resolve conflicts, do not force the merge, do not disable branch protection.
 
+### Step 4.5 — Drop the local branch
+
+`gh pr merge --delete-branch` deletes the **remote** branch. Also remove the PR's review worktree if one exists (`git worktree remove <worktree_root>/<headRefName>` — `.worktrees/<headRefName>` by default, `../<repo>-<headRefName>` under `sibling`; sibling skills rely on this happening here), then drop any stale local branch left behind:
+
+```bash
+git branch -D <headRefName> 2>/dev/null || true
+```
+
 ### Step 5 — Close the linked issue(s)
 
 This is the load-bearing step. For **each** linked issue number parsed in Step 3:
@@ -94,22 +114,26 @@ gh issue close <issue-number> \
 
 If closing an issue fails (permission error, API flake), retry once. If it still fails, report the failure — the merge itself remains valid, but the user needs to close the issue manually.
 
+### Step 5.5 — Profile-declared post-merge steps
+
+Applies only if the profile's `design_pipeline` doctrine declares post-merge procedures — donor: promoting accepted design baselines and refreshing a code-sourced design mirror after a frontend merge. Run them exactly as that doctrine writes them, on the base branch, best-effort: report the outcome, never roll back or block the merge on it. If the profile declares nothing, skip.
+
 ### Step 6 — Report
 
 Output a concise summary:
 - PR URL and `mergedAt` timestamp
 - Linked issue(s) closed (by number), or "none linked" if Step 3 found nothing
-- Base branch the PR merged into, with a reminder: **this is not master**. The base branch still needs a human to eventually merge into master when the full PRD is done.
+- Base branch the PR merged into, with a reminder: **this is not the default branch**. The base branch still needs a human to eventually merge into the default branch when the full PRD is done.
 - Suggest next step: "Re-run `/execute-issue <prd>` to pick up the next child."
 
 Stop. Do not chain into `/execute-issue` yourself.
 
 ## Critical Rules
 
-1. **Never merge without a passing review gate.** Either a formal `APPROVED` decision, or a complete `/review-pr` cycle where all skill-authored threads were resolved and no new blockers were raised. A bare COMMENT review with open threads does not qualify.
+1. **Never merge without an `APPROVE` verdict against the current head.** Either a `**Verdict: APPROVE**` marker whose reviewed SHA equals `headRefOid`, or a human's native `APPROVED` decision. A `COMMENT` verdict does not qualify no matter how many threads are resolved, and neither does an approval of a superseded commit — re-run `/review-pr` instead.
 2. **Never merge with unresolved review threads.** Suggest `/address-pr` instead.
 3. **Never attempt conflict resolution on a failed merge.** Stop and report; a human decides whether to rebase, merge-in, or escalate.
-4. **Never merge a PR targeting master.** PRs from `/execute-issue` target the PRD's base branch by design. A master-targeted PR is a structural bug upstream — stop and report.
+4. **Never merge a PR targeting the default branch.** PRs from `/execute-issue` target the PRD's base branch by design. A default-branch-targeted PR is a structural bug upstream — stop and report.
 5. **Always close the linked issue(s).** The whole point of this skill over a raw `gh pr merge --squash --delete-branch` is the explicit issue close. If you skip it, the child-issue tracker silently drifts.
 6. **Never reopen a closed issue to "re-close it cleanly".** If it is already closed, acknowledge in the report and move on.
 7. **Never disable required checks or branch protection to force a merge.** That is a conversation for the user, not this skill.
@@ -122,10 +146,12 @@ Stop. Do not chain into `/execute-issue` yourself.
 - **Merge conflict with base branch** → stop; ask the user to rebase or resolve manually
 - **PR body has no `Fixes #N`** → merge anyway, note the missing link in the report, leave any issue-closing to the user
 - **PR closes multiple issues** → close all of them, each with its own comment linking the merged PR
+- **Approval exists but new commits landed after it** → stop as `review_stale`; re-run `/review-pr <n>`. Common when `/address-pr` pushes a fix after the approving pass
+- **Review body starts with `Claude comment 🤖` but carries no verdict marker** → pre-protocol review; treat as `COMMENT` and re-review once. Never infer approval from resolved threads
 - **Branch protection requires a status check still pending** → stop; tell the user to wait for CI
 - **Branch protection requires a review from a specific user who hasn't reviewed** → stop and report; don't try to bypass
 - **Linked issue was deleted (not closed)** → report the dangling reference and continue
 - **Linked issue belongs to a different repo** → do not attempt cross-repo close; report and let the user handle it
-- **PR targets master instead of `prd-*`** → stop; something went wrong in `/execute-issue` that needs human attention, and merging past it would break the PRD workflow
-- **Squash-merge succeeded but `--delete-branch` failed** → report the dangling branch; the merge is still valid
+- **PR targets the default branch instead of `prd-*`** → stop; something went wrong in `/execute-issue` that needs human attention, and merging past it would break the PRD workflow
+- **Squash-merge succeeded but `--delete-branch` failed** → report the dangling branch; the merge is still valid. Step 4.5 still drops the local branch
 - **Multiple PRs reference the same `Fixes #N`** → close the issue on the first merge; the next merge will find it already closed and skip per Step 5

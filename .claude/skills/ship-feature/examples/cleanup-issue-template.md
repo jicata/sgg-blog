@@ -20,7 +20,7 @@ There is exactly **one** cleanup issue per PRD. Created lazily on first concern.
 ```markdown
 This issue tracks residual concerns from the /ship-feature autonomous orchestrator's run on PRD #<prd-number>.
 
-Each entry is a deferred fix. Resolve via /cleanup-ship-issues (when available) or by hand.
+Each entry is a deferred fix. Resolve via /drain-cleanup or by hand.
 
 ## Concessions
 
@@ -71,5 +71,5 @@ Each entry is a deferred fix. Resolve via /cleanup-ship-issues (when available) 
 1. Lazy-created when the first concern arises
 2. Appended to throughout the PRD run
 3. End-of-run report links to it
-4. `/cleanup-ship-issues` (v2) parses entries and either fixes or opens follow-up PRs
+4. `/drain-cleanup` parses entries, re-verifies each against current master, and spins off properly-formed follow-up issues
 5. Closed when all checklist items are ticked

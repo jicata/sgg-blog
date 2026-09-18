@@ -14,6 +14,8 @@ Used by the `/ship-feature` orchestrator when:
 - A thread has been rejected on 3 consecutive review rounds (Axis-B only, normal mode)
 - The PR has reached the 7-round hard cap and the orchestrator is forcing merge (`--force-axis-a` for any remaining Axis-A blockers)
 
+Where this skill says `master`, use the repo's default branch.
+
 ## Invocation
 
 `/afk-concede-thread <pr-number> <thread-id> <reason> [--force-axis-a]`
@@ -25,6 +27,10 @@ Required args:
 
 Optional flag:
 - `--force-axis-a` — only legal when invoked by the orchestrator's forced-merge path. Allows concession of `[AXIS-A]` threads with extra-loud cleanup-issue tagging.
+
+## Step 0.0 — Resilience setup (mandatory)
+
+Apply `.claude/skills/_afk-shared/resilience.md` §1 for the whole run: wrap every `gh` call and every remote `git` call as `GH_PAGER=cat GIT_PAGER=cat GIT_TERMINAL_PROMPT=0 timeout 120 <cmd>` (concede touches only gh metadata/GraphQL — no long commands). On a second timeout, note `[hang-timeout]` and emit the relevant failure result. **This skill runs inline in the orchestrator's own loop (not as a separate background Agent), so §1 is its only protection against a hang freezing the orchestrator** — there is no heartbeat to emit here.
 
 ## Step 0 — Orchestrated-mode preamble
 
@@ -91,7 +97,7 @@ Inspect the PR's base branch:
     ```json
     {"result": "no_prd_link", "details": "PR body or child issue does not reference a parent PRD"}
     ```
-- **Base branch is `master`** → single mode. Cleanup-issue title key is `Issue #<linked-issue>`. No parent-PRD lookup.
+- **Base branch is the default branch** → single mode. Cleanup-issue title key is `Issue #<linked-issue>`. No parent-PRD lookup.
 
 ## Step 4 — Upsert the cleanup issue
 
@@ -143,7 +149,7 @@ gh issue create \
   --body "$(cat <<EOF
 This issue tracks residual concerns from the /ship-feature autonomous orchestrator's run on PRD #<prd-number>.
 
-Each entry is a deferred fix. Resolve via /cleanup-ship-issues (when available) or by hand.
+Each entry is a deferred fix. Resolve via /drain-cleanup or by hand.
 
 ## Concessions
 
@@ -160,7 +166,7 @@ gh issue create \
   --body "$(cat <<EOF
 This issue tracks residual concerns from the /ship-issue autonomous orchestrator's run on Issue #<linked-issue>.
 
-Each entry is a deferred fix. Resolve via /cleanup-ship-issues (when available) or by hand.
+Each entry is a deferred fix. Resolve via /drain-cleanup or by hand.
 
 ## Concessions
 
@@ -175,7 +181,7 @@ Capture the cleanup issue number.
 ## Step 5 — Post the thread reply
 
 ```bash
-gh api /repos/<owner>/<repo>/pulls/<pr-number>/comments/<first-comment-id>/replies \
+gh api repos/<owner>/<repo>/pulls/<pr-number>/comments/<first-comment-id>/replies \
   --method POST \
   -f body="Claude comment 🤖
 
@@ -225,7 +231,7 @@ If the mutation fails, log the error in the structured return but do not roll ba
 
 1. **Refuse Axis-A concession without `--force-axis-a`.** Defensive guard against orchestrator bugs.
 2. **Always upsert the cleanup issue first** before resolving the thread. If the cleanup-issue write fails, do not resolve the thread — the audit trail must exist.
-3. **Use the standard entry format** — `/cleanup-ship-issues` (v2) parses these.
+3. **Use the standard entry format** — `/drain-cleanup` parses these.
 4. **Single cleanup issue per PRD.** Never create a second one.
 5. **Always emit the structured JSON return.**
 6. **Never concede a thread that's already resolved** — return `thread_already_resolved`.

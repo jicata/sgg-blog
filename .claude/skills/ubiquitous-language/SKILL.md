@@ -1,6 +1,6 @@
 ---
 name: ubiquitous-language
-description: Extract a DDD-style ubiquitous language glossary from the current conversation, flagging ambiguities and proposing canonical terms. Saves to UBIQUITOUS_LANGUAGE.md. Use when user wants to define domain terms, build a glossary, harden terminology, create a ubiquitous language, or mentions "domain model" or "DDD".
+description: Extract a DDD-style ubiquitous language glossary from the current conversation, flagging ambiguities and proposing canonical terms. Saves to the repo's glossary file. Use when user wants to define domain terms, build a glossary, harden terminology, create a ubiquitous language, or mentions "domain model" or "DDD".
 ---
 
 # Ubiquitous Language
@@ -15,12 +15,12 @@ Extract and formalize domain terminology from the current conversation into a co
    - Different words used for the same concept (synonyms)
    - Vague or overloaded terms
 3. **Propose a canonical glossary** with opinionated term choices
-4. **Write to `UBIQUITOUS_LANGUAGE.md`** in the `docs` directory using the format below
+4. **Write to the glossary file** at the path recorded in the project profile (`.claude/doctrine/project-profile.md`; default `docs/UBIQUITOUS_LANGUAGE.md`) using the format below
 5. **Output a summary** inline in the conversation
 
 ## Output Format
 
-Write a `UBIQUITOUS_LANGUAGE.md` file with this structure:
+Write the glossary with this structure:
 
 ```md
 # Ubiquitous Language
@@ -58,7 +58,7 @@ Write a `UBIQUITOUS_LANGUAGE.md` file with this structure:
 
 ## Rules
 
-- **Project rule — group by bounded context.** In this codebase, group terms by the slice that owns the canonical definition (likely candidates: Site Shell, Portfolio/Projects, Articles, Contact). Terms genuinely used by 2+ contexts go in a top-of-file **Cross-cutting Domain Entities** table with an extra **"Shading across contexts"** column that names the per-slice emphasis when it's non-trivial (leave blank when every consumer reads the term identically). Slice-internal terms stay in their owning context's table without a shading column. This rule **overrides** the generic "group by subdomain / lifecycle / actor" guidance below and the lifecycle/actor-shaped example in the *Output Format* section — those are kept for portability of this skill, not as the recommended shape for this project. See `docs/UBIQUITOUS_LANGUAGE.md` for the current canonical structure once it exists.
+- **If the project profile declares multiple bounded contexts** (or a slice/context map), group terms by the context that owns the canonical definition, mirroring that map. Terms genuinely used by 2+ contexts go in a top-of-file cross-cutting table with an extra **"Shading across contexts"** column that names the per-context emphasis when it's non-trivial (leave blank when every consumer reads the term identically). Context-internal terms stay in their owning context's table without a shading column. This grouping **overrides** the generic "group by subdomain / lifecycle / actor" guidance below.
 - **Be opinionated.** When multiple words exist for the same concept, pick the best one and list the others as aliases to avoid.
 - **Flag conflicts explicitly.** If a term is used ambiguously in the conversation, call it out in the "Flagged ambiguities" section with a clear recommendation.
 - **Keep definitions tight.** One sentence max. Define what it IS, not what it does.
@@ -71,7 +71,7 @@ Write a `UBIQUITOUS_LANGUAGE.md` file with this structure:
 
 When invoked again in the same conversation:
 
-1. Read the existing `UBIQUITOUS_LANGUAGE.md`
+1. Read the existing glossary file
 2. Incorporate any new terms from subsequent discussion
 3. Update definitions if understanding has evolved
 4. Mark changed entries with "(updated)" and new entries with "(new)"
@@ -82,4 +82,4 @@ When invoked again in the same conversation:
 
 After writing the file, state:
 
-> I've written/updated `UBIQUITOUS_LANGUAGE.md`. From this point forward I will use these terms consistently. If I drift from this language or you notice a term that should be added, let me know.
+> I've written/updated the glossary. From this point forward I will use these terms consistently. If I drift from this language or you notice a term that should be added, let me know.

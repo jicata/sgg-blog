@@ -11,11 +11,20 @@ Autonomous-mode fork of `/address-pr`. Same job — fix unresolved review thread
 2. **Regression localization** before declaring a fix impossible
 3. **Structured JSON return** for the orchestrator
 
+**Repo facts come from the profile** (`.claude/doctrine/project-profile.md`): check commands, coder lens routing, doc-canon locations, wire-contract artifacts. Where this skill says `master`, use the repo's default branch; JSON `result` names stay verbatim.
+
 ## Invocation
 
 `/afk-address-pr <pr-number>`
 
 If no PR number, return `{"result": "missing_pr"}` and stop.
+
+## Step 0.0 — Resilience setup (mandatory)
+
+Apply `.claude/skills/_afk-shared/resilience.md` for the whole run:
+
+- **Non-interactive, time-boxed shell (§1).** Wrap every `gh` call and every remote `git` call (`fetch`/`pull`/`push`/`clone`/`ls-remote`/remote-ref `checkout`) as `GH_PAGER=cat GIT_PAGER=cat GIT_TERMINAL_PROMPT=0 timeout <N> <cmd>` — `N=120` for gh metadata/GraphQL, `N=180` for fetch/pull/push/checkout. Local-only git needs no wrapper. On a second timeout (exit 124), take this skill's documented failure path (`push_failure` / `rebase_conflict`) and log a `[hang-timeout]` cleanup entry. This prevents the pager/credential/network wedges that otherwise freeze the orchestrator forever.
+- **Heartbeat (§2, optional).** A passive progress log — nothing reads it to make decisions and the run does not depend on it; it is only a trace you can `tail` while watching this agent in the live display. If a heartbeat token was passed, you may append `echo "$(date +%s) | <phase> | <detail>" >> tmp/afk/heartbeat-<token>.log` at the start of a Step or before a long command. Omitting it has no effect.
 
 ## Step 0 — Orchestrated-mode preamble
 
@@ -104,12 +113,9 @@ For each unresolved thread, classify into one of four buckets and act accordingl
 
 ### Bucket A: in-scope, fixable
 
-The thread's concern falls within the child issue's AC. Apply the fix using:
-- `*.cs` or `SvetlinGalovBlog.IntegrationTests` → `.claude/skills/vsa-tdd/SKILL.md`
-- `SvetlinGalovBlog/wwwroot/svetlin-galov-blog/src/**` → `.claude/skills/fe-tdd/SKILL.md`
-- Both → both, backend first
+The thread's concern falls within the child issue's AC. Apply the fix, routing by file type to the repo's composite coder lens(es) per the profile.
 
-Update docs in the same commit if the fix changes behavior described in any feature README, flow, or ADR.
+Update docs in the same commit if the fix touches the lean documentation canon (ADRs, the glossary, the wire-contract artifacts the profile declares — per the repo's documentation doctrine).
 
 ### Bucket B: out-of-scope (pushback)
 
@@ -118,7 +124,7 @@ The thread asks for changes beyond the child issue's Acceptance Criteria.
 1. **Do not implement the change.**
 2. Post a pushback reply on the thread:
    ```bash
-   gh api /repos/<owner>/<repo>/pulls/<pr>/comments/<first-comment-id>/replies \
+   gh api repos/<owner>/<repo>/pulls/<pr>/comments/<first-comment-id>/replies \
      --method POST \
      -f body="Claude comment 🤖
 
@@ -152,16 +158,19 @@ Thread asks for the opposite of an explicit Acceptance Criterion.
 ### Regression localization
 
 If applying a Bucket-A fix introduces (or reveals) a test failure:
-1. Run `git stash` and re-run tests on the clean baseline. If the failure exists pre-fix → it is pre-existing → log `[regression]` entry to cleanup, restore stash, continue.
-2. If the failure was introduced by the fix → keep working until tests pass. **Never `[Skip(...)]`.**
+1. Run `git stash` and re-run the **same lane** on the clean baseline (the profile's `check_commands` fast lane, exactly as spelled — donor scar: an unfiltered test run with the integration rig down mimics a mass regression). If the failure exists pre-fix → it is pre-existing → log `[regression]` entry to cleanup, restore stash, continue.
+2. If the failure was introduced by the fix → keep working until tests pass. **Never `[Skip(...)]`** (or the repo's test-framework equivalent).
 3. If genuinely irreducible after best effort, restore stash, log `[regression-from-fix]` entry, emit `result: regression` and return.
 
-## Step 5 — Run the full test suite
+## Step 5 — Run the pre-push gate
 
-- `dotnet test` (if any `*.cs` touched in PR)
-- `cd SvetlinGalovBlog/wwwroot/svetlin-galov-blog && npm test -- --run` (if any `SvetlinGalovBlog/wwwroot/svetlin-galov-blog/src/**` touched)
+Build + the **fast lane** of the profile's `check_commands`, if any source file was touched in the PR.
 
 Both must be green. If pre-existing red baseline: log `[regression]` to cleanup, do not push, emit `result: regression`.
+
+Expensive lanes (integration rigs, contract regressions) run in CI on the push, in parallel with the next review round — do **not** run them here. Exception: if the profile declares a local-run exception (donor example: fixes touching persistence, entities, EF configuration, or migrations ran the emulator-backed integration lane once locally), honor it.
+
+**If an Axis-C thread on this PR reported a CI failure**, that failure is in scope for this round exactly like any other blocker — fix it. If it is an expensive-lane failure you cannot reproduce with the fast lane, reproduce it by running that lane per the profile rather than guessing.
 
 ## Step 6 — Commit and push (single batched push)
 
@@ -187,7 +196,7 @@ If push fails for non-conflict reasons → log `[push-failure]` to cleanup, emit
 Same `upsert_cleanup_issue` routine documented in `/afk-execute-issue/SKILL.md`. The cleanup-issue title and search key depend on the PR's base branch:
 
 - **PR targets `prd-*`** (PRD mode, `/ship-feature` flow) → title `[ship-cleanup] PRD #<prd-number> — residual concerns`, derive `<prd-number>` from the base branch name (`prd-<n>-...`)
-- **PR targets `master`** (single mode, `/ship-issue` flow) → title `[ship-cleanup] Issue #<issue-number> — residual concerns`, derive `<issue-number>` from the PR body's `Fixes #N` line. Lazy-create only on residue (matches `/ship-issue`'s policy); do NOT create speculatively.
+- **PR targets the default branch** (single mode, `/ship-issue` flow) → title `[ship-cleanup] Issue #<issue-number> — residual concerns`, derive `<issue-number>` from the PR body's `Fixes #N` line. Lazy-create only on residue (matches `/ship-issue`'s policy); do NOT create speculatively.
 
 Standard entry formats this skill emits:
 
@@ -215,8 +224,7 @@ Standard entry formats this skill emits:
   "threads_contradictory": [<thread_id>...],
   "threads_ac_conflict": [<thread_id>...],
   "tests": {
-    "backend": "pass" | "fail" | "n/a",
-    "frontend": "pass" | "fail" | "n/a"
+    "backend": "pass" | "fail" | "n/a"
   },
   "cleanup_issue": <n> | null,
   "cleanup_entries_added": [<tags>],
@@ -229,7 +237,7 @@ Standard entry formats this skill emits:
 1. **Never resolve review threads yourself.** Reviewer arbitrates. This skill posts replies and cleanup entries; thread resolution is `/afk-review-pr` or `/afk-concede-thread`.
 2. **Never commit with red tests.**
 3. **Never silently expand scope.** Out-of-scope threads get pushback replies, not silent implementation.
-4. **Never `[Skip(...)]` regressions.** Log and return.
+4. **Never `[Skip(...)]` regressions** (or the repo's test-framework equivalent). Log and return.
 5. **Never force-push or rewrite history.**
 6. **Never push partial progress.** Fix every in-scope thread, then one commit, one push.
 7. **Always emit the structured JSON return**, even on hard failure.
