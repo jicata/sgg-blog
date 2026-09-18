@@ -3,6 +3,7 @@
 **Status**: Implemented
 **Governs**: cross-cutting
 **Date**: 2026-05-18
+**Superseded-By**: [ADR-002](002-static-site-platform.md) — Decision 2 (`usePageMeta`) and Decision 4 (deploy target) only. Decisions 1 (OKLCH tokens) and 3 (MDX discovery, in outcome if not mechanism) remain in effect; see ADR-002's Design section.
 
 ## Background
 

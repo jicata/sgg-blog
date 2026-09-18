@@ -9,7 +9,7 @@ description: The composite lens every coder run loads before writing code in thi
 
 ## Always load, before any code
 
-1. `.claude/doctrine/project-profile.md` — repo facts, `check_commands`, and the constraints that override everything below. Read **Transition** first while the revamp is in flight.
+1. `.claude/doctrine/project-profile.md` — repo facts, `check_commands`, and the constraints that override everything below.
 2. `.claude/doctrine/00-doctrine-index.md` — the routing table this lens mirrors.
 3. `.claude/skills/karpathy-guidelines/SKILL.md` — general coding approach.
 4. `.claude/skills/codebase-design/SKILL.md` — module depth and clean seams (applies to layouts and helpers even in a static site).
@@ -22,7 +22,7 @@ description: The composite lens every coder run loads before writing code in thi
 | --- | --- |
 | Anything under `src/pages/`, `src/layouts/`, `src/components/` | `.claude/doctrine/arch-frontend.md` (structure: page vs component, promotion rule) + profile → Frontend (Astro idiom, zero-JS default, tokens) |
 | A post or project under `src/content/`, or `src/content.config.ts` | profile → Content (frontmatter contract, draft filtering, the ADR gate on schema changes) |
-| The global stylesheet or any style | profile → Frontend (tokens only) + `specs/design-handoff/design-spec.md` (the token source) |
+| The global stylesheet or any style | profile → Frontend (tokens only) + `src/styles/global.css` (the token source) |
 | `.github/workflows/**`, `astro.config.*`, `public/CNAME` | profile → Deploy & environments |
 | Anything under `docs/` | `.claude/doctrine/documentation-first.md` + profile → Documentation (the lean canon; the ADR gate) |
 

@@ -1,0 +1,111 @@
+---
+import Base from '../layouts/Base.astro';
+import PostList from '../components/PostList.astro';
+import PhotoPlaceholder from '../components/PhotoPlaceholder.astro';
+import { getPublishedPosts } from '../lib/content';
+import { href } from '../lib/url';
+
+const posts = await getPublishedPosts();
+---
+
+<Base
+  title="Svetlin Galov — backend tech lead"
+  description="Backend tech lead, agentic-first. Ten years building C#/.NET systems — currently leading at VSG Bulgaria."
+  ogType="website"
+>
+  <div class="container">
+    <section class="hero" aria-label="Hero">
+      <PhotoPlaceholder size={80} />
+      <div class="hero-copy">
+        <h1 class="text-display-l">Svetlin Galov</h1>
+        <p class="text-body-l dek">
+          Backend tech lead, agentic-first. Ten years building C#/.NET systems — currently
+          leading at <span class="highlight">VSG Bulgaria</span>, where I'm reshaping how the
+          team ships with coding agents as teammates.
+        </p>
+      </div>
+    </section>
+
+    <section class="writing" aria-label="Writing">
+      <p class="text-label section-label">Writing</p>
+      <PostList posts={posts} />
+    </section>
+
+    <section class="about-teaser" aria-label="About">
+      <p class="text-body-l teaser-copy">
+        I write about backend architecture and building with coding agents as teammates.
+        The longer story — career arc, what I work on, how to reach me — is on <a href={href('/about/')}>the About page</a>.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero {
+    padding-block-start: var(--space-8);
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .hero-copy {
+    flex: 1 1 320px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .hero-copy h1 {
+    color: var(--fg);
+  }
+
+  .dek {
+    color: var(--fg-muted);
+    max-width: var(--measure-narrow);
+  }
+
+  .highlight {
+    color: var(--fg);
+  }
+
+  .writing {
+    margin-top: var(--space-9);
+  }
+
+  .section-label {
+    color: var(--fg-dim);
+    margin-bottom: var(--space-5);
+  }
+
+  .about-teaser {
+    margin-top: var(--space-9);
+    padding-top: var(--space-6);
+    border-top: var(--border-width) solid var(--border);
+    padding-bottom: var(--space-9);
+  }
+
+  .teaser-copy {
+    color: var(--fg-muted);
+    max-width: var(--prose);
+  }
+
+  .teaser-copy a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: 1px;
+  }
+
+  .teaser-copy a:hover {
+    color: var(--accent-strong);
+    text-decoration-thickness: 2px;
+  }
+
+  @media (max-width: 639px) {
+    .writing,
+    .about-teaser {
+      margin-top: var(--space-8);
+    }
+  }
+</style>

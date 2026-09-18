@@ -1,0 +1,74 @@
+---
+// Right-rail table of contents built from Astro's build-time headings. No JS, no active-state
+// (design-spec.md S12 Article detail; deferred per PRD #21 Implementation Decisions).
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{
+  items.length > 0 && (
+    <nav class="toc" aria-label="Table of contents">
+      <p class="toc-label text-label">On this page</p>
+      <ul class="toc-list">
+        {items.map((heading) => (
+          <li class={`toc-item toc-depth-${heading.depth}`}>
+            <a href={`#${heading.slug}`} class="text-ui-s">
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  .toc {
+    display: none;
+  }
+
+  .toc-label {
+    color: var(--fg-dim);
+    margin-bottom: var(--space-3);
+  }
+
+  .toc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    border-left: var(--border-width-strong) solid var(--border);
+  }
+
+  .toc-item a {
+    display: block;
+    padding-left: var(--space-4);
+    color: var(--fg-muted);
+    text-decoration: none;
+    transition: color var(--duration) var(--ease);
+  }
+
+  .toc-item a:hover {
+    color: var(--accent);
+  }
+
+  .toc-depth-3 a {
+    padding-left: var(--space-6);
+  }
+
+  @media (min-width: 1024px) {
+    .toc {
+      display: block;
+      width: var(--toc-width);
+      position: sticky;
+      top: var(--space-6);
+      align-self: start;
+    }
+  }
+</style>

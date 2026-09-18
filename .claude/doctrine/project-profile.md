@@ -3,14 +3,14 @@
 **Priority:** High. Pointed at from the generated `CLAUDE.md`, so an agent is told to read it every session — but it is **not** auto-loaded, and nothing but `CLAUDE.md` is. Constraints that must survive regardless (the catastrophic, non-discoverable few) belong *in* `CLAUDE.md`; everything else lives here and is read on the way in. This is the repo's overlay over the read-only base skill library: the machine-readable facts other skills key off, and the repo's own scar tissue. Base files are never edited; everything repo-specific lands here.
 
 ```yaml
-stack: "Astro (static output) + Markdown/MDX content collections + plain CSS custom properties. Zero client-side JS by default. TARGET stack — see Transition below; the React SPA + .NET shell on main is being deleted, not maintained"
+stack: "Astro (static output) + Markdown content collections + plain CSS custom properties. Zero client-side JS by default. Live stack as of PRD #21 (2026-09-18) — see Transition below"
 architecture: "Astro conventions — src/pages (routes), src/layouts, src/components (presentational, props only), src/content/{posts,projects} (typed collections). No backend, no server, no database"
 architecture_core: none               # no backend; Astro's page/layout/content split is governed by arch-frontend.md (structure) — see doctrine/AXES.md
 backend_core: none                    # static site — there is no backend language to govern
 frontend_core: none                   # BASE-LIBRARY GAP: no frontend-astro.md core exists. arch-frontend.md installs alone. Raise via /skill-sync; never author a core here
 tracker: "GitHub issues (jicata/sgg-blog, private, default branch main)"
 check_commands:
-  - "npm run build"                   # astro check (types + content schema) + astro build; the single gate. Real once the Astro revamp lands
+  - "npm run build"                   # astro check (types + content schema) + astro build; the single gate
 mode: brownfield                      # content, design tokens and docs carry over; the runtime is replaced wholesale
 chassis: none
 legacy_oracle: none
@@ -22,7 +22,7 @@ review_identity: app                  # claude-reviewer-jicata[bot], reused from
 review_app_token_cmd: "GH_APP_ID=4515491 GH_APP_INSTALLATION_ID=151915759 GH_APP_PRIVATE_KEY_PATH=$HOME/.ssh/claude-reviewer-jicata.pem node $HOME/.claude/gh-app-token.js"
 coder_lens: {default: coder-lens}     # the generated composite lens; execute-issue / afk-execute-issue / afk-coder resolve it from here
 worktree_root: sibling                # ../SvetlinGalovBlog-<branch>; the ship lanes already used ../SvetlinGalovBlog-ship-prd-1 for PRD #1
-design_pipeline: none                 # the May-2026 design handoff (specs/design-handoff/) is a one-off port, not a running pipeline
+design_pipeline: none                 # the May-2026 design handoff was a one-off port (specs/design-handoff/, ported into src/styles/global.css and deleted at PRD #21), not a running pipeline
 models:                               # per-role tiers (2026-09-18): opus makes concession/arbitration calls and grades; sonnet is the cheap implementation seat
   orchestrator: opus
   coder: sonnet
@@ -41,11 +41,9 @@ base_version: b8b7d75                 # jicata/skills main, installed 2026-09-18
 - **Axis conflicts resolve one way:** the architecture core wins on **placement**, the language core wins on **idiom**, and a constraint in *this file* beats both. See `doctrine/AXES.md`.
 - **Graduate at a screen:** when a section outgrows one screen, move its body to its own doctrine file (e.g. `.claude/doctrine/<topic>.md`) and leave one index line here pointing at it.
 
-## Transition (read first until the revamp lands)
+## Transition (retired)
 
-> **The profile describes the TARGET stack (Astro static site), not what is on `main` today.** `main` still holds the May-2026 launch shape: a React 19 + MUI + React Query SPA at `SvetlinGalovBlog/wwwroot/svetlin-galov-blog/`, wrapped in an ASP.NET Core static-file shell, deployed to Azure App Service. All of it is scheduled for deletion by the revamp PRD. Until that PRD merges, `check_commands` and the `.claude/rules/` globs point at paths that do not exist yet — that is expected, not drift. **Do not extend, fix, or document the React/.NET code**; any work on it is wasted. WHY: the operator decided on 2026-09-18 to replace the runtime wholesale ("simple and fast, kinda like html only, with the ability to add new blog posts every now and then"). Evidence: session 2026-09-18; the revamp plan is recorded in the operator's project memory and will become a `PRD:` issue.
-
-> **What carries over from the old shape, verbatim in intent:** the locked visual design (dark only, warm amber accent `oklch(0.78 0.10 75)`, IBM Plex Sans + Source Serif 4 + IBM Plex Mono — full tokens in `specs/design-handoff/design-spec.md`), the three project case studies (`src/content/projects/*.mdx` in the old SPA), the About and Contact copy, `public/og-image.png`, the photo. The positioning brief in `DESIGN-BRIEF.md` (senior backend tech lead, agentic-first, career-arc voice, no urgency) still governs every word on the site. Evidence: `DESIGN-BRIEF.md`, `specs/design-handoff/README.md` ("no decisions remain").
+> The revamp landed via PRD #21 (2026-09-18): the React 19 + MUI + .NET/Azure stack is deleted, and the profile's stack line above is now the live reality, not a target. `check_commands` and the `.claude/rules/` globs are real. See `docs/adr/002-static-site-platform.md` for the platform decision and `docs/architecture.md` for the current map.
 
 ## Working style
 
@@ -79,7 +77,7 @@ Base doctrine: `doctrine/arch-frontend.md` governs structure (page vs component 
 
 > **Zero client JavaScript by default. `<script>` tags and framework islands need a named reason in the PR.** WHY: page weight and simplicity are the revamp's success criteria; every island is a runtime the site did not have. Evidence: operator's brief, 2026-09-18.
 
-> **Colors, type and spacing come from the CSS custom properties in the global stylesheet, ported 1:1 from `specs/design-handoff/design-spec.md`. No literal color, font or pixel value in a component.** WHY: the design was locked in May 2026 after a full design pass; ad-hoc values are how it erodes. Evidence: `specs/design-handoff/README.md`, ADR-001 Decision 1 (OKLCH tokens).
+> **Colors, type and spacing come from the CSS custom properties in `src/styles/global.css`, ported 1:1 from the locked May-2026 design spec. No literal color, font or pixel value in a component.** WHY: the design was locked in May 2026 after a full design pass; ad-hoc values are how it erodes. Evidence: main's git history: `specs/design-handoff/README.md` (deleted in PRD #21), ADR-001 Decision 1 (OKLCH tokens).
 
 ## Testing
 
@@ -107,19 +105,19 @@ Base doctrine: `doctrine/arch-frontend.md` governs structure (page vs component 
 
 ## Deploy & environments
 
-> **Deploy is in-repo: a GitHub Actions workflow builds on push to `main` and publishes to GitHub Pages.** No GitOps, no gateway, no sibling infra repos. WHY: the path from merged code to a running site never leaves this repository, so `templates/deploy-infra` was not instantiated. **Until the revamp lands**, `.github/workflows/deploy.yml` on `main` still targets Azure App Service via `dotnet publish`; it is deleted with the .NET shell. Whether the Azure App Service is still running (and billing) is an open question for the operator.
+> **Deploy is in-repo: `.github/workflows/deploy.yml` builds via `withastro/action` on push to `main` and publishes to GitHub Pages via `actions/deploy-pages`.** No GitOps, no gateway, no sibling infra repos. WHY: the path from merged code to a running site never leaves this repository. Live at **https://jicata.github.io/sgg-blog/** — a GitHub Pages project site, hence `astro.config.mjs` sets `base: '/sgg-blog'`; every internal link must go through the `href()` helper (`src/lib/url.ts`) so it resolves under that base both locally and in production. Whether the old Azure App Service from PRD #1 is still running (and billing) is an open question for the operator — this revamp (PRD #21) did not touch Azure resources, only the repo's deploy target. Evidence: `docs/adr/002-static-site-platform.md`.
 
-> **The custom domain, if any, is a CNAME file in `public/` plus a DNS record — both are the operator's to set.** Record the domain here once chosen.
+> **The custom domain, if any, is a CNAME file in `public/` plus a DNS record — both are the operator's to set.** Not chosen yet; when it is, `site` moves to the domain and `base` moves to `'/'` in `astro.config.mjs` (steps in `README.md` → Custom domain).
 
 ## Documentation
 
 The lean canon, per `doctrine/documentation-first.md`:
 
 - **Glossary** — `docs/UBIQUITOUS_LANGUAGE.md` (seeded at adoption; one bounded context).
-- **ADRs** — `docs/adr/NNN-slug.md`, index and shape rules in `docs/adr/README.md`. ADR-001 (design port) is `Implemented`; the revamp ADR will supersede its deploy-target and `usePageMeta` decisions. The ADR gate (hard to reverse + surprising without context + a real trade-off) applies; most decisions in a static site do not clear it and belong here as constraints instead.
+- **ADRs** — `docs/adr/NNN-slug.md`, index and shape rules in `docs/adr/README.md`. ADR-001 (design port) is `Implemented`, partially superseded by [ADR-002](../../docs/adr/002-static-site-platform.md) (static site platform: Astro, Markdown content, GitHub Pages), which supersedes ADR-001's deploy-target and `usePageMeta` decisions. The ADR gate (hard to reverse + surprising without context + a real trade-off) applies; most decisions in a static site do not clear it and belong here as constraints instead.
 - **Architecture map** — `docs/architecture.md` (seeded at adoption; a positional map, never a description).
 
-> **The pre-adoption documentation matrix (feature READMEs, flow docs, roadmap, UX foundations, `specs/UX-*.md`) is retired and must not be recreated.** `specs/design-handoff/` stays only as the design-token source until the tokens are ported into the stylesheet, then it is deleted. `DESIGN-BRIEF.md`, `DESIGN-PACK.md`, `HANDOFF.md` are point-in-time artifacts from PRD #1; their still-binding content (positioning, voice) migrates into the glossary and the revamp ADR, then they go. WHY: the old `documentation-creator` rule prescribed seven document tiers for a five-page site. Evidence: deleted `.claude/rules/documentation-creator.md`, 2026-09-18.
+> **The pre-adoption documentation matrix (feature READMEs, flow docs, roadmap, UX foundations, `specs/UX-*.md`) is retired and must not be recreated.** `specs/design-handoff/`, `DESIGN-BRIEF.md`, `DESIGN-PACK.md`, and `HANDOFF.md` were point-in-time artifacts from PRD #1 and #21; their still-binding content migrated into the glossary (positioning/voice → `docs/UBIQUITOUS_LANGUAGE.md` → The brief) and `docs/adr/002-static-site-platform.md` (design tokens → `src/styles/global.css`), then all four were deleted at PRD #21, 2026-09-18. WHY: the old `documentation-creator` rule prescribed seven document tiers for a five-page site. Evidence: deleted `.claude/rules/documentation-creator.md`, 2026-09-18.
 
 ## External contracts
 

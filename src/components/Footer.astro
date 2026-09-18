@@ -1,0 +1,63 @@
+---
+// Site-wide footer: contact links only. No form, no backend.
+---
+
+<footer class="site-footer">
+  <div class="container footer-row">
+    <a href="mailto:svetlingalov@gmail.com" class="footer-link text-ui-s" aria-label="Email">
+      Email
+    </a>
+    <span class="dot" aria-hidden="true">·</span>
+    <a
+      href="https://github.com/jicata"
+      class="footer-link text-ui-s"
+      target="_blank"
+      rel="noreferrer"
+      aria-label="GitHub"
+    >
+      GitHub
+    </a>
+    <span class="dot" aria-hidden="true">·</span>
+    <a
+      href="https://www.linkedin.com/in/svetlin-galov/"
+      class="footer-link text-ui-s"
+      target="_blank"
+      rel="noreferrer"
+      aria-label="LinkedIn"
+    >
+      LinkedIn
+    </a>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: var(--border-width) solid var(--border);
+    margin-top: var(--space-9);
+  }
+
+  .footer-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+  }
+
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    padding-block: var(--space-3);
+    margin-block: calc(var(--space-3) * -1);
+    color: var(--fg-muted);
+    text-decoration: none;
+    transition: color var(--duration) var(--ease);
+  }
+
+  .footer-link:hover {
+    color: var(--fg);
+  }
+
+  .dot {
+    color: var(--fg-dim);
+  }
+</style>
