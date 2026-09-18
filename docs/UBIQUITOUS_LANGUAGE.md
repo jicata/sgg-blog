@@ -9,8 +9,8 @@ Seeded 2026-09-18 at skills adoption, from `DESIGN-BRIEF.md` and the revamp deci
 | Term | Meaning | Notes |
 | --- | --- | --- |
 | **Post** | A dated piece of writing, one Markdown file under `src/content/posts/`, published by adding the file. | Never "article" — that was the old SPA's route name. A Post with `draft: true` exists in the repo but not on the site. |
-| **Project** | A career-arc case study, one Markdown file under `src/content/projects/`. Three at launch (SoftUni, Dow Jones, VSG) plus the featured slot-4 case study. | "Job project" and "slot-4" come from the brief's IA and may appear in old artifacts; the collection term is Project. |
-| **Page** | A route-addressable entry point, one file under `src/pages/`. Owns its URL and fetches its content. | Home (`/`), Post (`/posts/:slug/`), Project (`/projects/:slug/`), About (`/about/`, folds in the old Projects index and Contact page), 404 (`/404`), RSS feed (`/rss.xml`). |
+| **Project** | A career-arc case study, one Markdown file under `src/content/projects/`. Three in the repo (SoftUni, Dow Jones, VSG) plus the featured slot-4 case study. | Hidden; content retained, no route. Owner decision 2026-09-18 — the collection and its Markdown files stay in the repo, but no page reads them. "Job project" and "slot-4" come from the brief's IA and may appear in old artifacts. |
+| **Page** | A route-addressable entry point, one file under `src/pages/`. Owns its URL and fetches its content. | Home (`/`), Post (`/posts/:slug/`), About (`/about/`, folds in the old Contact page), 404 (`/404`), RSS feed (`/rss.xml`). |
 | **Layout** | The shared frame a Page renders into: head, nav, footer, global styles. Under `src/layouts/`. | One base layout; page-family layouts only if two pages actually share more than the base. |
 | **Component** | A props-only building block under `src/components/`. Never reads a collection. | Promoted out of a page's folder only when a second page imports it. |
 | **Collection** | A typed set of content entries (Posts, Projects) declared in `src/content.config.ts` with a frontmatter schema. | Schema changes are ADR-gated (profile → Content). |
